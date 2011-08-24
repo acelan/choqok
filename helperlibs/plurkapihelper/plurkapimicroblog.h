@@ -38,9 +38,6 @@ along with this program; if not, see http://www.gnu.org/licenses/
    Liked & Replurked
 */
 
-#define getPlurkUrl	"/Timeline/getPlurk"		// plurk_id is required
-#define getPlurksUrl	"/Timeline/getPlurks"
-
 namespace QJson {
 class Parser;
 }
@@ -52,6 +49,16 @@ class Interface;
 class PlurkApiSearchTimelineWidget;
 class PlurkApiAccount;
 class KJob;
+
+class CHOQOK_HELPER_EXPORT PlurkUser : public Choqok::User
+{
+public:
+    PlurkUser() {}
+    QString displayName;
+    QString dateOfBirth;
+    QString gender;
+    QString karma;
+};
 
 class CHOQOK_HELPER_EXPORT PlurkPost : public Choqok::Post
 {
@@ -279,7 +286,8 @@ protected:
 
     QJson::Parser *jsonParser();
     virtual Choqok::Post * readPostFromJsonMap( Choqok::Account* theAccount,
-                                                   const QVariantMap& var, Choqok::Post* post );
+                                                   const QVariantMap& var, PlurkPost* post,
+						   const QVariantMap& userMap );
     virtual Choqok::Post * readPostFromJson( Choqok::Account* theAccount,
                                             const QByteArray& buffer, Choqok::Post* post );
     virtual QList<Choqok::Post*> readTimelineFromJson( Choqok::Account* theAccount, const QByteArray& buffer );
