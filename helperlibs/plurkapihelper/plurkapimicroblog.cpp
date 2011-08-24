@@ -737,6 +737,9 @@ void PlurkApiMicroBlog::updateTimelines (Choqok::Account* theAccount)
 
 QString PlurkApiMicroBlog::getTimeLinePath ( QString type)
 {
+	const QString getPlurkUrl="/Timeline/getPlurk";		// plurk_id is required
+	const QString getPlurksUrl="/Timeline/getPlurks";
+
 	return QString("");
 }
 
@@ -754,8 +757,8 @@ void PlurkApiMicroBlog::requestTimeLine ( Choqok::Account* theAccount, QString t
     int countOfPost = Choqok::BehaviorSettings::countOfPosts();
 
     QOAuth::ParamMap params;
-    params.insert ( "limit", "1" );
-    url.addQueryItem ( "limit", "1" );
+    params.insert ( "limit", "20" );
+    url.addQueryItem ( "limit", "20" );
     if( type == "Mine")
     {
         params.insert( "filter", "only_user");
@@ -1146,16 +1149,20 @@ QList< Choqok::Post* > PlurkApiMicroBlog::readTimelineFromJson(Choqok::Account* 
     QList<Choqok::Post*> postList;
     bool ok;
     QVariantMap plurksMap= d->parser.parse(buffer, &ok).toMap();
+    QVariantMap plurkUsersMap = plurksMap["plurk_users"].toMap();
     QVariantList plurksList = plurksMap["plurks"].toList();
-    kDebug() << "map: " << plurksMap;
-    kDebug() << "list: " << plurksList;
+    kDebug() << "map: " << plurksMap << endl;
+//    kDebug() << "plurk_users: " << plurkUsersMap << endl;
+//    kDebug() << "plurks(" << plurksList.count() << "): " << plurksList << endl;
 
-    kDebug() << "parse result: " << ok;
+    kDebug() << "parse result: " << ok << endl;
     if ( ok ) {
         QVariantList::const_iterator it = plurksList.constBegin();
         QVariantList::const_iterator endIt = plurksList.constEnd();
         for(; it != endIt; ++it){
-            postList.prepend(readPostFromJsonMap(theAccount, it->toMap(), new Choqok::Post));
+            QVariantMap plurkMap= it->toMap();
+            kDebug() << "owner_id: " << plurkMap["owner_id"].toString() << endl;
+            postList.prepend(readPostFromJsonMap(theAccount, it->toMap(), new PlurkPost, plurkUsersMap[plurkMap["owner_id"].toString()].toMap()));
         }
     } else {
         QString err = checkJsonForError(buffer);
@@ -1175,10 +1182,13 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJson(Choqok::Account* theAccount,
                                                     Choqok::Post* post)
 {
     bool ok;
-    QVariantMap map = d->parser.parse(buffer, &ok).toMap();
+//    QVariantMap map = d->parser.parse(buffer, &ok).toMap();
+    QVariantMap plurksMap= d->parser.parse(buffer, &ok).toMap();
+    QVariantMap plurkUserMap = plurksMap["plurk_users"].toMap();
+    QVariantMap plurkMap = plurksMap["plurks"].toMap();
 
     if ( ok ) {
-        return readPostFromJsonMap ( theAccount, map, post );
+        return readPostFromJsonMap ( theAccount, plurkMap, (PlurkPost*)post, plurkUserMap );
     } else {
         if(!post){
             kError()<<"PlurkApiMicroBlog::readPostFromXml: post is NULL!";
@@ -1193,29 +1203,32 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJson(Choqok::Account* theAccount,
 
 Choqok::Post* PlurkApiMicroBlog::readPostFromJsonMap(Choqok::Account* theAccount,
                                                        const QVariantMap& var,
-                                                       Choqok::Post* post)
+                                                       PlurkPost* post, const QVariantMap& userMap)
 {
     if(!post){
         kError()<<"PlurkApiMicroBlog::readPostFromJsonMap: post is NULL!";
         return 0;
     }
-    PlurkPost* _post= (PlurkPost*)post;
-    _post->content = var["content"].toString();
-//    _post->creationDateTime = var["posted"].toString();
-    _post->isFavorited = var["favorite"].toBool();
-    _post->postId = var["plurk_id"].toString();
-    _post->source = var["content_raw"].toString();
-    _post->plurkType = var["plurk_type"].toInt();
+    kDebug() << "userMap: " << userMap << endl;
+    kDebug() << "post: " << var << endl;
+
+//    PlurkPost* _post= (PlurkPost*)post;
+    post->content = var["content"].toString();
+//    post->creationDateTime = var["posted"].toString();
+    post->isFavorited = var["favorite"].toBool();
+    post->postId = var["plurk_id"].toString();
+    post->source = var["content_raw"].toString();
+    post->plurkType = var["plurk_type"].toInt();
 //    QVariantMap userMap = var["user"].toMap();
-//    _post->author.description = userMap["description"].toString();
-//    _post->author.realName = userMap["name"].toString();
-//    _post->author.userId = var["user_id"].toString();
-//    _post->author.userName = userMap["screen_name"].toString();
-//    _post->author.profileImageUrl = userMap["profile_image_url"].toString();
-//    _post->author.homePageUrl = userMap["statusnet_profile_url"].toString();
-//    _post->link = postUrl(theAccount, post->author.userName, post->postId);
-//    _post->isRead = post->isFavorited || (post->repeatedFromUsername.compare(theAccount->username(), Qt::CaseInsensitive) == 0);
-    return (Choqok::Post*)_post;
+//    post->author.description = userMap["description"].toString();
+    post->author.realName = userMap["full_name"].toString();
+    post->author.userId = var["id"].toString();
+    post->author.userName = userMap["display_name"].toString();
+//    post->author.profileImageUrl = userMap["profile_image_url"].toString();
+//    post->author.homePageUrl = userMap["statusnet_profile_url"].toString();
+//    post->link = postUrl(theAccount, post->author.userName, post->postId);
+//    post->isRead = post->isFavorited || (post->repeatedFromUsername.compare(theAccount->username(), Qt::CaseInsensitive) == 0);
+    return (Choqok::Post*)post;
 }
 
 QList< Choqok::Post* > PlurkApiMicroBlog::readDMessagesFromJson(Choqok::Account* theAccount,
