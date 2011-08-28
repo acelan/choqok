@@ -310,31 +310,44 @@ PlurkApiSearchTimelineWidget * PlurkApiMicroBlog::createSearchTimelineWidget(Cho
 
 void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* post )
 {
-    kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
-    QByteArray data;
-    QOAuth::ParamMap params;
-    if ( !post || post->content.isEmpty() ) {
-        kDebug() << "ERROR: Status text is empty!";
-        emit errorPost ( theAccount, post, Choqok::MicroBlog::OtherError,
+	kDebug();
+	PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+	QByteArray data;
+	QOAuth::ParamMap params;
+	if ( !post || post->content.isEmpty() ) {
+	    kDebug() << "ERROR: Status text is empty!";
+	    emit errorPost ( theAccount, post, Choqok::MicroBlog::OtherError,
                          i18n ( "Creating the new post failed. Text is empty." ), MicroBlog::Critical );
-        return;
-    }
-    if ( !post->isPrivate ) {///Status Update
-        KUrl url = account->apiUrl();
-        url.addPath ( QString("/statuses/update.%1").arg(format) );
-        params.insert("status", QUrl::toPercentEncoding (  post->content ));
-        if(!post->replyToPostId.isEmpty())
-            params.insert("in_reply_to_status_id", post->replyToPostId.toLocal8Bit());
-        data = "status=";
-        data += QUrl::toPercentEncoding (  post->content );
-        if ( !post->replyToPostId.isEmpty() ) {
-            data += "&in_reply_to_status_id=";
-            data += post->replyToPostId.toLocal8Bit();
-        }
-        if( !account->usingOAuth() )
-            data += "&source=Choqok";
-        KIO::StoredTransferJob *job = KIO::storedHttpPost ( data, url, KIO::HideProgressInfo ) ;
+	    return;
+	}
+
+	// Franklin.20110828
+	KUrl url = QString("http://www.plurk.com/APP/Timeline/plurkAdd");
+
+	// required parameters:
+	data = "content=";
+	data += QUrl::toPercentEncoding ( post->content );
+	data += "&qualifier=";
+	data += QUrl::toPercentEncoding (":");
+
+	// optional parameters:
+	//data += "&limited_to=";
+	//data += "[0]";
+	//data += "&no_comments=";
+	//data += "1";
+	//data += "&lang=";
+	//data += "tr_ch";
+
+        params.insert("content", QUrl::toPercentEncoding ( post->content ));
+	params.insert("qualifier", QUrl::toPercentEncoding(":"));	// no qualifier
+
+	// optional parameters:
+	// get friends list first?
+	//params.insert("limited_to", "[0]");// [0] to friends only
+        //params.insert("no_comments", "1");	// 1: disable reply, 2: friends reply only
+	//params.insert("lang", "tr_ch");
+
+        KIO::StoredTransferJob *job = KIO::storedHttpPost(  data, url, KIO::HideProgressInfo ) ;
         if ( !job ) {
             kDebug() << "Cannot create an http POST request!";
             return;
@@ -345,32 +358,6 @@ void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* 
         mJobsAccount[job] = theAccount;
         connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotCreatePost ( KJob* ) ) );
         job->start();
-    } else {///Direct message
-        QString recipientScreenName = post->replyToUserName;
-        KUrl url = account->apiUrl();
-        url.addPath ( QString("/direct_messages/new.%1").arg(format) );
-        params.insert("user", recipientScreenName.toLocal8Bit());
-        params.insert("text", QUrl::toPercentEncoding ( post->content ));
-        data = "user=";
-        data += recipientScreenName.toLocal8Bit();
-        data += "&text=";
-        data += QUrl::toPercentEncoding ( post->content );
-        if( !account->usingOAuth() )
-            data += "&source=Choqok";
-        KIO::StoredTransferJob *job = KIO::storedHttpPost ( data, url, KIO::HideProgressInfo ) ;
-        if ( !job ) {
-            kDebug() << "Cannot create an http POST request!";
-//             QString errMsg = i18n ( "Creating the new post failed. Cannot create an http POST request. Please check your KDE installation." );
-//             emit errorPost ( theAccount, post, Choqok::MicroBlog::OtherError, errMsg, MicroBlog::Critical );
-            return;
-        }
-        job->addMetaData ( "content-type", "Content-Type: application/x-www-form-urlencoded" );
-        job->addMetaData("customHTTPHeader", "Authorization: " + authorizationHeader(account, url, QOAuth::POST, params));
-        mCreatePostMap[ job ] = post;
-        mJobsAccount[job] = theAccount;
-        connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotCreatePost ( KJob* ) ) );
-        job->start();
-    }
 }
 
 void PlurkApiMicroBlog::repeatPost(Choqok::Account* theAccount, const ChoqokId& postId)
@@ -830,14 +817,12 @@ void PlurkApiMicroBlog::slotRequestTimeline ( KJob *job )
 //    }
 }
 
-QByteArray PlurkApiMicroBlog::authorizationHeader(PlurkApiAccount* theAccount, const KUrl &requestUrl,
-                                                    QOAuth::HttpMethod method, QOAuth::ParamMap params)
+QByteArray PlurkApiMicroBlog::authorizationHeader(PlurkApiAccount* theAccount, const KUrl &requestUrl, QOAuth::HttpMethod method, QOAuth::ParamMap params)
 {
     QByteArray auth;
     if(theAccount->usingOAuth()){
-        auth = theAccount->oauthInterface()->createParametersString( requestUrl.url(), method, theAccount->oauthToken(),
-                                                             theAccount->oauthTokenSecret(), QOAuth::HMAC_SHA1,
-                                                             params, QOAuth::ParseForHeaderArguments );
+        auth = theAccount->oauthInterface()->createParametersString( requestUrl.url(), method, theAccount->oauthToken(), theAccount->oauthTokenSecret(), QOAuth::HMAC_SHA1, params, QOAuth::ParseForHeaderArguments );
+//kDebug() << "******* auth=" << auth << endl;
     } else {
         auth = theAccount->username().toUtf8() + ':' + theAccount->password().toUtf8();
         auth = auth.toBase64().prepend( "Basic " );
