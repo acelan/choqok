@@ -211,7 +211,8 @@ QList< Choqok::Post* > PlurkApiMicroBlog::loadTimeline( Choqok::Account *account
             st->isRead = grp.readEntry( "is_unread", true);
             st->plurkType = grp.readEntry( "plurk_type", 0);
             st->author.userId = grp.readEntry( "user_id", QString() );
-            st->creationDateTime = grp.readEntry( "posted", QDateTime::currentDateTime() );
+	    // Franklin.20110826
+            st->creationDateTime = dateFromString(grp.readEntry( "posted", QDateTime::currentDateTime().toString()));
             st->noComments = grp.readEntry( "no_comments", 0 );
             st->content = grp.readEntry( "text", QString() );
             st->source = grp.readEntry( "content_raw", QString() );
@@ -867,12 +868,22 @@ void PlurkApiMicroBlog::setRepeatedOfInfo(Choqok::Post* post, Choqok::Post* repe
 
 QDateTime PlurkApiMicroBlog::dateFromString ( const QString &date )
 {
-    char s[10];
+	// Franklin.20110826: Can not use QDateTime::fromString(), because
+	// localized dayname/monthname will become Chinese under locale zh_TW.*
+	// hence making the parsing misbehaved.
+
+    char wday[10], mon[10], tz[10];
     int year, day, hours, minutes, seconds;
-    sscanf( qPrintable ( date ), "%*s %s %d %d:%d:%d %*s %d", s, &day, &hours, &minutes, &seconds, &year );
-    int month = d->monthes[s];
+
+    //sscanf( qPrintable ( date ), "%*s %s %d %d:%d:%d %*s %d", s, &day, &hours, &minutes, &seconds, &year );
+    // Franklin.20110826
+    sscanf( qPrintable ( date ), "%s %d %s %d %d:%d:%d %s", wday, &day, mon, &year, &hours, &minutes, &seconds, tz);
+
+    int month = d->monthes[mon];
+
     QDateTime recognized ( QDate ( year, month, day ), QTime ( hours, minutes, seconds ) );
     recognized.setTimeSpec( Qt::UTC );
+
     return recognized.toLocalTime();
 }
 
@@ -1214,7 +1225,10 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJsonMap(Choqok::Account* theAccount
 
 //    PlurkPost* _post= (PlurkPost*)post;
     post->content = var["content"].toString();
-//    post->creationDateTime = var["posted"].toString();
+
+    // Franklin.20110827
+    post->creationDateTime = dateFromString(var["posted"].toString());
+
     post->isFavorited = var["favorite"].toBool();
     post->postId = var["plurk_id"].toString();
     post->source = var["content_raw"].toString();
