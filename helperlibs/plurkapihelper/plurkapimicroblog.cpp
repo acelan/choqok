@@ -321,18 +321,23 @@ void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* 
     }
     if ( !post->isPrivate ) {///Status Update
         KUrl url = account->apiUrl();
-        url.addPath ( QString("/statuses/update.%1").arg(format) );
-        params.insert("status", QUrl::toPercentEncoding (  post->content ));
-        if(!post->replyToPostId.isEmpty())
-            params.insert("in_reply_to_status_id", post->replyToPostId.toLocal8Bit());
-        data = "status=";
-        data += QUrl::toPercentEncoding (  post->content );
-        if ( !post->replyToPostId.isEmpty() ) {
-            data += "&in_reply_to_status_id=";
-            data += post->replyToPostId.toLocal8Bit();
-        }
-        if( !account->usingOAuth() )
-            data += "&source=Choqok";
+        // TODO this API URL should collect to a map
+        url.addPath ( QString("/Timeline/plurkAdd") );
+        params.insert( "qualifier", QUrl::toPercentEncoding( ":" ) );
+        params.insert("content", QUrl::toPercentEncoding (  post->content ));
+//         if(!post->replyToPostId.isEmpty())
+//             params.insert("in_reply_to_status_id", post->replyToPostId.toLocal8Bit());
+//         data = "status=";
+//         data += QUrl::toPercentEncoding (  post->content );
+//         if ( !post->replyToPostId.isEmpty() ) {
+//             data += "&in_reply_to_status_id=";
+//             data += post->replyToPostId.toLocal8Bit();
+//         }
+//         if( !account->usingOAuth() )
+//             data += "&source=Choqok";
+        data += "content=" + KUrl::toPercentEncoding( post->content );
+        data += "&";
+        data += "qualifier=" + KUrl::toPercentEncoding( ":" );
         KIO::StoredTransferJob *job = KIO::storedHttpPost ( data, url, KIO::HideProgressInfo ) ;
         if ( !job ) {
             kDebug() << "Cannot create an http POST request!";
@@ -1188,6 +1193,11 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJson(Choqok::Account* theAccount,
     QVariantMap plurkMap = plurksMap["plurks"].toMap();
 
     if ( ok ) {
+        if( plurksMap.contains( "error_text" ) ) {
+            kError() << "PlurkApiMicroBlog::readPostFromJson:" << plurksMap["error_text"].toString();
+            post->isError = true;
+            return post;
+        }
         return readPostFromJsonMap ( theAccount, plurkMap, (PlurkPost*)post, plurkUserMap );
     } else {
         if(!post){
