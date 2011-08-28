@@ -309,72 +309,47 @@ PlurkApiSearchTimelineWidget * PlurkApiMicroBlog::createSearchTimelineWidget(Cho
 
 void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* post )
 {
-    kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
-    QByteArray data;
-    QOAuth::ParamMap params;
     if ( !post || post->content.isEmpty() ) {
         kDebug() << "ERROR: Status text is empty!";
         emit errorPost ( theAccount, post, Choqok::MicroBlog::OtherError,
                          i18n ( "Creating the new post failed. Text is empty." ), MicroBlog::Critical );
         return;
     }
-    if ( !post->isPrivate ) {///Status Update
-        KUrl url = account->apiUrl();
-        // TODO this API URL should collect to a map
-        url.addPath ( QString("/Timeline/plurkAdd") );
-        params.insert( "qualifier", QUrl::toPercentEncoding( ":" ) );
-        params.insert("content", QUrl::toPercentEncoding (  post->content ));
-//         if(!post->replyToPostId.isEmpty())
-//             params.insert("in_reply_to_status_id", post->replyToPostId.toLocal8Bit());
-//         data = "status=";
-//         data += QUrl::toPercentEncoding (  post->content );
-//         if ( !post->replyToPostId.isEmpty() ) {
-//             data += "&in_reply_to_status_id=";
-//             data += post->replyToPostId.toLocal8Bit();
-//         }
-//         if( !account->usingOAuth() )
-//             data += "&source=Choqok";
-        data += "content=" + KUrl::toPercentEncoding( post->content );
+
+    QOAuth::ParamMap params;
+    params.insert( "qualifier", QUrl::toPercentEncoding( ":" ) );
+    params.insert( "content", QUrl::toPercentEncoding( post->content ) );
+
+    QByteArray data;
+    data += "content=" + QUrl::toPercentEncoding( post->content );
+    data += "&";
+    data += "qualifier=" + QUrl::toPercentEncoding( ":" );
+
+    if( post->isPrivate ) {
+        // TODO let user select friends
+        params.insert( "limited_to", QUrl::toPercentEncoding( "[0]" ) );
         data += "&";
-        data += "qualifier=" + KUrl::toPercentEncoding( ":" );
-        KIO::StoredTransferJob *job = KIO::storedHttpPost ( data, url, KIO::HideProgressInfo ) ;
-        if ( !job ) {
-            kDebug() << "Cannot create an http POST request!";
-            return;
-        }
-        job->addMetaData ( "content-type", "Content-Type: application/x-www-form-urlencoded" );
-        job->addMetaData("customHTTPHeader", "Authorization: " + authorizationHeader(account, url, QOAuth::POST, params));
-        mCreatePostMap[ job ] = post;
-        mJobsAccount[job] = theAccount;
-        connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotCreatePost ( KJob* ) ) );
-        job->start();
-    } else {///Direct message
-        QString recipientScreenName = post->replyToUserName;
-        KUrl url = account->apiUrl();
-        url.addPath ( QString("/direct_messages/new.%1").arg(format) );
-        params.insert("user", recipientScreenName.toLocal8Bit());
-        params.insert("text", QUrl::toPercentEncoding ( post->content ));
-        data = "user=";
-        data += recipientScreenName.toLocal8Bit();
-        data += "&text=";
-        data += QUrl::toPercentEncoding ( post->content );
-        if( !account->usingOAuth() )
-            data += "&source=Choqok";
-        KIO::StoredTransferJob *job = KIO::storedHttpPost ( data, url, KIO::HideProgressInfo ) ;
-        if ( !job ) {
-            kDebug() << "Cannot create an http POST request!";
-//             QString errMsg = i18n ( "Creating the new post failed. Cannot create an http POST request. Please check your KDE installation." );
-//             emit errorPost ( theAccount, post, Choqok::MicroBlog::OtherError, errMsg, MicroBlog::Critical );
-            return;
-        }
-        job->addMetaData ( "content-type", "Content-Type: application/x-www-form-urlencoded" );
-        job->addMetaData("customHTTPHeader", "Authorization: " + authorizationHeader(account, url, QOAuth::POST, params));
-        mCreatePostMap[ job ] = post;
-        mJobsAccount[job] = theAccount;
-        connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotCreatePost ( KJob* ) ) );
-        job->start();
+        data += "limited_to=" + QUrl::toPercentEncoding( "[0]" );
     }
+
+    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    KUrl url = account->apiUrl();
+    // TODO this API URL should collect to a map
+    url.addPath( "/Timeline/plurkAdd" );
+
+    KIO::StoredTransferJob * job = KIO::storedHttpPost( data, url, KIO::HideProgressInfo );
+    if ( !job ) {
+        kDebug() << "Cannot create an http POST request!";
+        return;
+    }
+    job->addMetaData( "content-type", "Content-Type: application/x-www-form-urlencoded" );
+    job->addMetaData( "customHTTPHeader", "Authorization: " + authorizationHeader(account, url, QOAuth::POST, params) );
+
+    mCreatePostMap[job] = post;
+    mJobsAccount[job] = theAccount;
+
+    connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotCreatePost ( KJob* ) ) );
+    job->start();
 }
 
 void PlurkApiMicroBlog::repeatPost(Choqok::Account* theAccount, const ChoqokId& postId)
@@ -1192,14 +1167,7 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJson(Choqok::Account* theAccount,
     QVariantMap plurkUserMap = plurksMap["plurk_users"].toMap();
     QVariantMap plurkMap = plurksMap["plurks"].toMap();
 
-    if ( ok ) {
-        if( plurksMap.contains( "error_text" ) ) {
-            kError() << "PlurkApiMicroBlog::readPostFromJson:" << plurksMap["error_text"].toString();
-            post->isError = true;
-            return post;
-        }
-        return readPostFromJsonMap ( theAccount, plurkMap, (PlurkPost*)post, plurkUserMap );
-    } else {
+    if ( !ok ) {
         if(!post){
             kError()<<"PlurkApiMicroBlog::readPostFromXml: post is NULL!";
             post = new Choqok::Post;
@@ -1209,6 +1177,13 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJson(Choqok::Account* theAccount,
         post->isError = true;
         return post;
     }
+    if( plurksMap.contains( "error_text" ) ) {
+        kError() << "PlurkApiMicroBlog::readPostFromJson:" << plurksMap["error_text"].toString();
+        post->isError = true;
+        return post;
+    }
+    return NULL;
+//    return readPostFromJsonMap ( theAccount, plurkMap, dynamic_cast< PlurkPost * >( post ), plurkUserMap );
 }
 
 Choqok::Post* PlurkApiMicroBlog::readPostFromJsonMap(Choqok::Account* theAccount,
