@@ -44,7 +44,7 @@ public:
     void setTo(const QString &username);
 
 protected Q_SLOTS:
-    void friendsUsernameListed(PlurkApiAccount*,QStringList);
+    void friendsUsernameListed(PlurkApiAccount*,const QMap< QString, QString > &);
     void submitPost(QString);
     void reloadFriendslist();
     void postCreated(Choqok::Account*,Choqok::Post*);

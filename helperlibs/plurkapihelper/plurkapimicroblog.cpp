@@ -76,6 +76,7 @@ public:
     QString friendsCursor;
     QMap<QString, int> monthes;
     QJson::Parser parser;
+    QMap< QString, QString > friendsMap;
 };
 
 PlurkApiMicroBlog::PlurkApiMicroBlog ( const KComponentData &instance, QObject *parent )
@@ -327,10 +328,10 @@ void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* 
     data += "qualifier=" + QUrl::toPercentEncoding( ":" );
 
     if( post->isPrivate ) {
-        // TODO let user select friends
-        params.insert( "limited_to", QUrl::toPercentEncoding( "[0]" ) );
+        // TODO send private messages to friends, should change PlurkApiDMessageDialog
+        params.insert( "limited_to", QUrl::toPercentEncoding( "[" + post->replyToUserId + "]" ) );
         data += "&";
-        data += "limited_to=" + QUrl::toPercentEncoding( "[0]" );
+        data += "limited_to=" + QUrl::toPercentEncoding( "[" + post->replyToUserId + "]" );
     }
 
     PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
@@ -650,9 +651,40 @@ void PlurkApiMicroBlog::slotRemoveFavorite ( KJob *job )
     }
 }
 
+void PlurkApiMicroBlog::getProfile(PlurkApiAccount* theAccount)
+{
+    KUrl url( theAccount->apiUrl() );
+    url.addPath( "/Profile/getOwnProfile" );
+
+    KIO::StoredTransferJob * job = KIO::storedHttpPost( "", url, KIO::HideProgressInfo );
+    if ( !job ) {
+        kDebug() << "Cannot create an http POST request!";
+        return;
+    }
+
+    job->addMetaData( "customHTTPHeader", "Authorization: " + authorizationHeader(theAccount, url, QOAuth::POST) );
+    mJobsAccount[job] = theAccount;
+    connect( job, SIGNAL( result( KJob* ) ), this, SLOT( slotGetProfile(KJob*) ) );
+    job->start();
+}
+
+void PlurkApiMicroBlog::slotGetProfile(KJob* job)
+{
+    PlurkApiAccount *theAccount = qobject_cast<PlurkApiAccount *>( mJobsAccount.take(job) );
+    KIO::StoredTransferJob* stJob = qobject_cast<KIO::StoredTransferJob*>( job );
+    if (stJob->error()) {
+        emit error(theAccount, ServerError, i18n("Profile for account %1 could not be updated:\n%2",
+            theAccount->username(), stJob->errorString()), Critical);
+        return;
+    }
+    QVariantMap userData( this->readProfileFromJson( theAccount, stJob->data() ) );
+    theAccount->setUserId( userData["id"].toString() );
+    theAccount->setUsername( userData["display_name"].toString() );
+}
+
 void PlurkApiMicroBlog::listFriendsUsername(PlurkApiAccount* theAccount)
 {
-    friendsList.clear();
+    this->d->friendsMap.clear();
     if ( theAccount ) {
         requestFriendsScreenName(theAccount);
     }
@@ -660,22 +692,35 @@ void PlurkApiMicroBlog::listFriendsUsername(PlurkApiAccount* theAccount)
 
 void PlurkApiMicroBlog::requestFriendsScreenName(PlurkApiAccount* theAccount)
 {
-    kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+//    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
 /*
     KUrl url = account->apiUrl();
     url.addPath( QString("/statuses/friends.xml") );
     url.addQueryItem( "cursor", d->friendsCursor );
 */
-    KUrl url = QString("http://www.plurk.com/APP/FriendsFans/getFriendsByOffset");
-    url.addQueryItem( "user_id", "acelan" );
+    KUrl url( theAccount->apiUrl() );
+    url.addPath( "/FriendsFans/getFriendsByOffset" );
 
-    KIO::StoredTransferJob *job = KIO::storedGet( url, KIO::Reload, KIO::HideProgressInfo ) ;
+    QByteArray data;
+    data += "user_id=" + QUrl::toPercentEncoding( theAccount->userId() );
+    data += "&";
+    data += "offset=" + QUrl::toPercentEncoding( QString::number( this->d->friendsMap.size() ) );
+    data += "&";
+    data += "limit=" + QUrl::toPercentEncoding( QString::number( 100 ) );
+
+    KIO::StoredTransferJob *job = KIO::storedHttpPost( data, url, KIO::HideProgressInfo );
     if ( !job ) {
-        kDebug() << "Cannot create an http GET request!";
+        kDebug() << "Cannot create an http POST request!";
         return;
     }
-    job->addMetaData("customHTTPHeader", "Authorization: " + authorizationHeader(account, url, QOAuth::GET));
+
+    QOAuth::ParamMap params;
+    params.insert( "user_id", theAccount->userId().toUtf8() );
+    params.insert( "offset", QString::number( this->d->friendsMap.size() ).toUtf8() );
+    params.insert( "limit", QString::number( 100 ).toUtf8() );
+
+    job->addMetaData( "content-type", "Content-Type: application/x-www-form-urlencoded" );
+    job->addMetaData("customHTTPHeader", "Authorization: " + authorizationHeader(theAccount, url, QOAuth::POST, params));
     mJobsAccount[job] = theAccount;
     connect( job, SIGNAL( result( KJob* ) ), this, SLOT( slotRequestFriendsScreenName(KJob*) ) );
     job->start();
@@ -684,8 +729,6 @@ void PlurkApiMicroBlog::requestFriendsScreenName(PlurkApiAccount* theAccount)
 
 void PlurkApiMicroBlog::slotRequestFriendsScreenName(KJob* job)
 {
-    kDebug();
-#if 0
     PlurkApiAccount *theAccount = qobject_cast<PlurkApiAccount *>( mJobsAccount.take(job) );
     KIO::StoredTransferJob* stJob = qobject_cast<KIO::StoredTransferJob*>( job );
     if (stJob->error()) {
@@ -693,19 +736,18 @@ void PlurkApiMicroBlog::slotRequestFriendsScreenName(KJob* job)
             theAccount->username(), stJob->errorString()), Critical);
         return;
     }
-    QStringList newList;
-    newList = readUsersScreenNameFromXml( theAccount, stJob->data() );
-    friendsList << newList;
-    if ( newList.count() == 100 ) {
+    QMap< QString, QString > newData;
+    newData = readUsersScreenNameFromJson( theAccount, stJob->data() );
+    this->d->friendsMap.unite( newData );
+    if ( newData.count() == 100 ) {
         requestFriendsScreenName( theAccount );
     } else {
-        friendsList.removeDuplicates();
-        theAccount->setFriendsList(friendsList);
+        // TODO we need to define a friend list format to contain ID and Display Name
+//         theAccount->setFriendsList(friendsList);
         Choqok::UI::Global::mainWindow()->showStatusMessage(i18n("Friends list for account %1 has been updated.",
             theAccount->username()) );
-        emit friendsUsernameListed( theAccount, friendsList );
+        emit friendsUsernameListed( theAccount, this->d->friendsMap );
     }
-#endif
 }
 
 void PlurkApiMicroBlog::updateTimelines (Choqok::Account* theAccount)
@@ -1323,10 +1365,10 @@ Choqok::User* PlurkApiMicroBlog::readUserInfoFromJson(const QByteArray& buffer)
     return 0;
 }
 
-QStringList PlurkApiMicroBlog::readUsersScreenNameFromJson(Choqok::Account* theAccount,
+QMap< QString, QString > PlurkApiMicroBlog::readUsersScreenNameFromJson(Choqok::Account* theAccount,
                                                              const QByteArray& buffer)
 {
-    QStringList list;
+    QMap< QString, QString > data;
     bool ok;
     QVariantList jsonList = d->parser.parse(buffer, &ok).toList();
 
@@ -1334,14 +1376,15 @@ QStringList PlurkApiMicroBlog::readUsersScreenNameFromJson(Choqok::Account* theA
         QVariantList::const_iterator it = jsonList.constBegin();
         QVariantList::const_iterator endIt = jsonList.constEnd();
         for(; it!=endIt; ++it){
-            list<<it->toMap()["screen_name"].toString();
+            QVariantMap tmp( it->toMap() );
+            data.insert( tmp["id"].toString(), tmp["display_name"].toString() );
         }
     } else {
         QString err = i18n( "Retrieving the friends list failed. The data returned from the server is corrupted." );
         kDebug() << "JSON parse error: the buffer is: \n" << buffer;
         emit error(theAccount, ParsingError, err, Critical);
     }
-    return list;
+    return data;
 }
 
 Choqok::User PlurkApiMicroBlog::readUserFromJsonMap(Choqok::Account* theAccount, const QVariantMap& map)
@@ -1358,6 +1401,13 @@ Choqok::User PlurkApiMicroBlog::readUserFromJsonMap(Choqok::Account* theAccount,
     u.userId = map["id"].toString();
     u.userName = map["screen_name"].toString();
     return u;
+}
+
+QVariantMap PlurkApiMicroBlog::readProfileFromJson(PlurkApiAccount* theAccount, const QByteArray& buffer)
+{
+    bool ok = false;
+    QVariantMap profile( this->d->parser.parse( buffer, &ok ).toMap() );
+    return profile["user_info"].toMap();
 }
 
 #include "plurkapimicroblog.moc"
