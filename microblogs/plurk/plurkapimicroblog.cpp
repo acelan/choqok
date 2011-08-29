@@ -290,20 +290,23 @@ void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* 
 	data += "&qualifier=";
 	data += QUrl::toPercentEncoding (":");
 
+        params.insert("content", QUrl::toPercentEncoding ( post->content ));
+        params.insert("qualifier", QUrl::toPercentEncoding(":"));       // no qualifier
+
+        if( post->isPrivate ) {
+            // TODO multiple friends support
+            data += "&limited_to=";
+            data += QUrl::toPercentEncoding( "[" + post->replyToUserId + "]" );
+            params.insert( "limited_to", QUrl::toPercentEncoding( "[" + post->replyToUserId + "]" ) );
+        }
+
 	// optional parameters:
-	//data += "&limited_to=";
-	//data += "[0]";
 	//data += "&no_comments=";
 	//data += "1";
 	//data += "&lang=";
 	//data += "tr_ch";
 
-        params.insert("content", QUrl::toPercentEncoding ( post->content ));
-	params.insert("qualifier", QUrl::toPercentEncoding(":"));	// no qualifier
-
 	// optional parameters:
-	// get friends list first?
-	//params.insert("limited_to", "[0]");// [0] to friends only
         //params.insert("no_comments", "1");	// 1: disable reply, 2: friends reply only
 	//params.insert("lang", "tr_ch");
 
