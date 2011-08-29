@@ -195,6 +195,8 @@ public:
 
     QDateTime dateFromString( const QString &date );
 
+    void getProfile( PlurkApiAccount * theAccount );
+
     /**
      * The text to add under repeated posts, to notice user about it.
      */
@@ -224,7 +226,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void favoriteCreated(Choqok::Account *theAccount, const QString &postId);
     void favoriteRemoved(Choqok::Account *theAccount, const QString &postId);
-    void friendsUsernameListed( PlurkApiAccount *theAccount, const QStringList &friendsList );
+    void friendsUsernameListed( PlurkApiAccount * theAccount, const QMap< QString, QString > & friendsList );
 
     void friendshipCreated(Choqok::Account *theAccount, const QString &newFriendUsername);
     void friendshipDestroyed(Choqok::Account *theAccount, const QString &username);
@@ -244,6 +246,7 @@ protected Q_SLOTS:
     virtual void slotBlockUser( KJob *job );
     virtual void slotUpdateFriendsList();
     virtual QString getTimeLinePath ( QString type);
+    virtual void slotGetProfile( KJob * job );
 
 protected:
     PlurkApiMicroBlog( const KComponentData &instance, QObject *parent=0 );
@@ -294,9 +297,10 @@ protected:
     virtual Choqok::Post * readDMessageFromJson(Choqok::Account *theAccount, const QByteArray &buffer );
     virtual Choqok::Post * readDMessageFromJsonMap(Choqok::Account *theAccount, const QVariantMap& var );
     virtual QList<Choqok::Post*> readDMessagesFromJson(Choqok::Account *theAccount, const QByteArray &buffer );
-    virtual QStringList readUsersScreenNameFromJson( Choqok::Account *theAccount, const QByteArray & buffer );
+    virtual QMap< QString, QString > readUsersScreenNameFromJson( Choqok::Account *theAccount, const QByteArray & buffer );
     virtual Choqok::User *readUserInfoFromJson( const QByteArray &buffer );
     virtual Choqok::User readUserFromJsonMap( Choqok::Account* theAccount, const QVariantMap& map );
+    virtual QVariantMap readProfileFromJson( PlurkApiAccount * theAccount, const QByteArray & buffer );
     /**
     Checks xml returned from server for error, and return error string, Or an empty string if nothing found!
     */
@@ -320,7 +324,6 @@ protected:
     QMap<KJob*, Choqok::Account*> mJobsAccount;
     QMap<KJob*, QString> mFriendshipMap;
     QString format;
-    QStringList friendsList;
 
 private:
     class Private;
