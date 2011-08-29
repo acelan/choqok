@@ -108,8 +108,8 @@ void PlurkApiDMessageDialog::reloadFriendslist()
     d->comboFriendsList->clear();
     PlurkApiMicroBlog * blog = qobject_cast<PlurkApiMicroBlog*>(d->account->microblog());
     if(blog) {
-        connect( blog, SIGNAL(friendsUsernameListed(PlurkApiAccount*,QStringList)),
-                 this, SLOT(friendsUsernameListed(PlurkApiAccount*,QStringList)) );
+        connect( blog, SIGNAL(friendsUsernameListed(PlurkApiAccount*,const QMap<QString,QString>&)),
+                 this, SLOT(friendsUsernameListed(PlurkApiAccount*,const QMap<QString,QString>&)) );
                  blog->listFriendsUsername(d->account);
                  d->comboFriendsList->setCurrentItem(i18n("Please wait..."), true);
     }
@@ -144,12 +144,14 @@ void PlurkApiDMessageDialog::submitPost(QString text)
     d->account->microblog()->createPost(d->account, d->sentPost);
 }
 
-void PlurkApiDMessageDialog::friendsUsernameListed(PlurkApiAccount* theAccount, QStringList list)
+void PlurkApiDMessageDialog::friendsUsernameListed(PlurkApiAccount* theAccount, const QMap< QString, QString > & list)
 {
     if(theAccount == d->account){
         d->comboFriendsList->removeItem(0);
-        list.sort();
-        d->comboFriendsList->addItems(list);
+        d->comboFriendsList->addItem( i18n( "** To All Friend **" ), "0" );
+        for( QMap< QString, QString >::const_iterator it = list.begin(); it != list.end(); ++it ) {     
+            d->comboFriendsList->addItem( it.value(), it.key() );
+        }
     }
 }
 

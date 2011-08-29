@@ -74,6 +74,11 @@ PlurkApiAccount::PlurkApiAccount(PlurkApiMicroBlog* parent, const QString &alias
         initQOAuthInterface();
     }
 
+    if( d->userId.isEmpty() ) {
+        // NOTE this is an asynchronized method
+        parent->getProfile( this );
+    }
+
     if( d->timelineNames.isEmpty() ){
         QStringList list = parent->timelineNames();
         list.removeOne("Public");
