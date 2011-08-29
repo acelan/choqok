@@ -24,7 +24,7 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #ifndef PLURKTIMELINEWIDGET_H
 #define PLURKTIMELINEWIDGET_H
 
-#include "plurkapihelper/plurkapitimelinewidget.h"
+#include "plurkapitimelinewidget.h"
 
 
 class PlurkTimelineWidget : public PlurkApiTimelineWidget

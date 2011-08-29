@@ -24,7 +24,7 @@
 
 #ifndef PLURKPOSTWIDGET_H
 #define PLURKPOSTWIDGET_H
-#include <plurkapihelper/plurkapipostwidget.h>
+#include <plurkapipostwidget.h>
 
 class PlurkPostWidget : public PlurkApiPostWidget
 {

@@ -4,19 +4,18 @@ ${CHOQOK_INCLUDES}
 )
 
 set(plurkhelper_LIB_SRCS
-plurkapiaccount.cpp
-plurkapimicroblog.cpp
-plurkapipostwidget.cpp
-plurkapidmessagedialog.cpp
-plurkapisearch.cpp
-plurkapisearchdialog.cpp
-plurkapimicroblogwidget.cpp
-plurkapisearchtimelinewidget.cpp
-plurkapiwhoiswidget.cpp
-plurkapishowthread.cpp
-plurkapitextedit.cpp
-plurkapicomposerwidget.cpp
-plurkapitimelinewidget.cpp
+plurkapialerts.cpp
+plurkapiblocks.cpp
+plurkapicliques.cpp
+plurkapiemoticons.cpp
+plurkapifriendsandfans.cpp
+plurkapiplurksearch.cpp
+plurkapiplurktop.cpp
+plurkapiprofile.cpp
+plurkapirealtime.cpp
+plurkapiresponses.cpp
+plurkapitimeline.cpp
+plurkapiusers.cpp
 )
 
 # kde4_add_kcfg_files(plurkhelper_LIB_SRCS
@@ -39,17 +38,16 @@ SOVERSION 1
 install(TARGETS plurkapihelper ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 install( FILES
-    plurkapiaccount.h
-    plurkapidmessagedialog.h
-    plurkapimicroblog.h
-    plurkapimicroblogwidget.h
-    plurkapipostwidget.h
-    plurkapisearch.h
-    plurkapisearchdialog.h
-    plurkapisearchtimelinewidget.h
-    plurkapiwhoiswidget.h
-    plurkapishowthread.h
-    plurkapitextedit.h
-    plurkapicomposerwidget.h
-    plurkapitimelinewidget.h
+plurkapialerts.h
+plurkapiblocks.h
+plurkapicliques.h
+plurkapiemoticons.h
+plurkapifriendsandfans.h
+plurkapiplurksearch.h
+plurkapiplurktop.h
+plurkapiprofile.h
+plurkapirealtime.h
+plurkapiresponses.h
+plurkapitimeline.h
+plurkapiusers.h
 DESTINATION ${INCLUDE_INSTALL_DIR}/choqok/plurkapihelper COMPONENT Devel)

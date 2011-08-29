@@ -12,6 +12,19 @@ plurksearch.cpp
 plurkeditaccount.cpp
 plurklistdialog.cpp
 plurktimelinewidget.cpp
+plurkapipostwidget.cpp
+plurkapidmessagedialog.cpp
+plurkapimicroblog.cpp
+plurkapimicroblogwidget.cpp
+plurkapisearchdialog.cpp
+plurkapisearchtimelinewidget.cpp
+plurkapiwhoiswidget.cpp
+plurkapishowthread.cpp
+plurkapitextedit.cpp
+plurkapicomposerwidget.cpp
+plurkapitimelinewidget.cpp
+plurkapiaccount.cpp
+plurkapisearch.cpp
 )
 
 kde4_add_ui_files(choqok_plurk_SRCS
