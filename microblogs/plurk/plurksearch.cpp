@@ -25,7 +25,7 @@
 #include "plurksearch.h"
 #include <KDebug>
 #include <klocalizedstring.h>
-#include <plurkapihelper/plurkapiaccount.h>
+#include <plurkapiaccount.h>
 #include <kio/jobclasses.h>
 #include <kio/job.h>
 #include <QDomElement>

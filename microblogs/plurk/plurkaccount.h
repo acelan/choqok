@@ -26,7 +26,7 @@
 #define PLURKACCOUNT_H
 
 #include <account.h>
-#include <plurkapihelper/plurkapiaccount.h>
+#include <plurkapiaccount.h>
 
 class PlurkMicroBlog;
 /**

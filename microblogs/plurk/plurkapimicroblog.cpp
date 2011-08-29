@@ -179,32 +179,8 @@ QList< Choqok::Post* > PlurkApiMicroBlog::loadTimeline( Choqok::Account *account
     if( count ) {
         PlurkPost *st = 0;
         for ( int i = 0; i < count; ++i ) {
-//            st = new Choqok::Post;
             st = new PlurkPost;
             KConfigGroup grp( &postsBackup, groupList[i].toString() );
-/*
-            st->creationDateTime = grp.readEntry( "creationDateTime", QDateTime::currentDateTime() );
-            st->postId = grp.readEntry( "postId", QString() );
-            st->content = grp.readEntry( "text", QString() );
-            st->source = grp.readEntry( "source", QString() );
-            st->replyToPostId = grp.readEntry( "inReplyToPostId", QString() );
-            st->replyToUserId = grp.readEntry( "inReplyToUserId", QString() );
-            st->isFavorited = grp.readEntry( "favorited", false );
-            st->replyToUserName = grp.readEntry( "inReplyToUserName", QString() );
-            st->author.userId = grp.readEntry( "authorId", QString() );
-            st->author.userName = grp.readEntry( "authorUserName", QString() );
-            st->author.realName = grp.readEntry( "authorRealName", QString() );
-            st->author.profileImageUrl = grp.readEntry( "authorProfileImageUrl", QString() );
-            st->author.description = grp.readEntry( "authorDescription" , QString() );
-            st->author.isProtected = grp.readEntry("isProtected", false);
-            st->isPrivate = grp.readEntry( "isPrivate" , false );
-            st->author.location = grp.readEntry("authorLocation", QString());
-            st->author.homePageUrl = grp.readEntry("authorUrl", QString());
-            st->link = postUrl( account, st->author.userName, st->postId);
-            st->isRead = grp.readEntry("isRead", true);
-            st->repeatedFromUsername = grp.readEntry("repeatedFrom", QString());
-            st->repeatedPostId = grp.readEntry("repeatedPostId", QString());
-*/
             st->postId = grp.readEntry( "plurk_id", QString() );
 	    st->qualifier = grp.readEntry( "qualifier", QString() );
             st->qualifierTranslated = grp.readEntry( "qualifierTranslated", QString() );
@@ -220,23 +196,6 @@ QList< Choqok::Post* > PlurkApiMicroBlog::loadTimeline( Choqok::Account *account
             st->responseSeen = grp.readEntry( "responseSeen", 0 );
             st->limitedTo= grp.readEntry( "limited_to", QString() );
 
-/*
-            st->replyToPostId = grp.readEntry( "inReplyToPostId", QString() );
-            st->replyToUserId = grp.readEntry( "inReplyToUserId", QString() );
-            st->isFavorited = grp.readEntry( "favorited", false );
-            st->replyToUserName = grp.readEntry( "inReplyToUserName", QString() );
-            st->author.userName = grp.readEntry( "authorUserName", QString() );
-            st->author.realName = grp.readEntry( "authorRealName", QString() );
-            st->author.profileImageUrl = grp.readEntry( "authorProfileImageUrl", QString() );
-            st->author.description = grp.readEntry( "authorDescription" , QString() );
-            st->author.isProtected = grp.readEntry("isProtected", false);
-            st->isPrivate = grp.readEntry( "isPrivate" , false );
-            st->author.location = grp.readEntry("authorLocation", QString());
-            st->author.homePageUrl = grp.readEntry("authorUrl", QString());
-            st->link = postUrl( account, st->author.userName, st->postId);
-            st->repeatedFromUsername = grp.readEntry("repeatedFrom", QString());
-            st->repeatedPostId = grp.readEntry("repeatedPostId", QString());
-*/
             list.append( st );
         }
         mTimelineLatestId[account][timelineName] = st->postId;

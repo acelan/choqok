@@ -25,7 +25,7 @@
 #ifndef PLURKSEARCH_H
 #define PLURKSEARCH_H
 
-#include "plurkapihelper/plurkapisearch.h"
+#include "plurkapisearch.h"
 
 /**
 Plurk.com search API implementation.

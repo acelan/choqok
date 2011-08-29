@@ -23,13 +23,13 @@
 */
 
 #include "plurkpostwidget.h"
-#include <plurkapihelper/plurkapimicroblog.h>
+#include <plurkapimicroblog.h>
 #include "plurksearch.h"
 #include <KAction>
 #include <KMenu>
 #include <klocalizedstring.h>
-#include <plurkapihelper/plurkapiwhoiswidget.h>
-#include <plurkapihelper/plurkapiaccount.h>
+#include <plurkapiwhoiswidget.h>
+#include <plurkapiaccount.h>
 #include <KPushButton>
 #include <choqoktools.h>
 

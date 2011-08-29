@@ -24,7 +24,7 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #define PLURKMICROBLOGPLUGIN_H
 
 #include <KUrl>
-#include <plurkapihelper/plurkapimicroblog.h>
+#include <plurkapimicroblog.h>
 #include <QPointer>
 #include "plurklist.h"
 

@@ -39,9 +39,9 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include "plurkaccount.h"
 #include "composerwidget.h"
 #include "plurkpostwidget.h"
-#include "plurkapihelper/plurkapimicroblogwidget.h"
+#include "plurkapimicroblogwidget.h"
 #include "plurksearch.h"
-#include "plurkapihelper/plurkapicomposerwidget.h"
+#include "plurkapicomposerwidget.h"
 #include "choqokappearancesettings.h"
 #include <QMenu>
 #include <KAction>
