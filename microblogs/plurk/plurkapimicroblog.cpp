@@ -1333,7 +1333,12 @@ QMap< QString, QString > PlurkApiMicroBlog::readUsersScreenNameFromJson(Choqok::
         QVariantList::const_iterator endIt = jsonList.constEnd();
         for(; it!=endIt; ++it){
             QVariantMap tmp( it->toMap() );
-            data.insert( tmp["id"].toString(), tmp["display_name"].toString() );
+            // NOTE some users has no display_name, in this case we need to fallback to nick_name
+            QString screenName( tmp["display_name"].toString() );
+            if( screenName.isEmpty() ) {
+                screenName = tmp["nick_name"].toString();
+            }
+            data.insert( tmp["id"].toString(), screenName );
         }
     } else {
         QString err = i18n( "Retrieving the friends list failed. The data returned from the server is corrupted." );
