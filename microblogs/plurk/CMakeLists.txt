@@ -12,7 +12,6 @@ plurksearch.cpp
 plurkeditaccount.cpp
 plurklistdialog.cpp
 plurktimelinewidget.cpp
-plurkapipostwidget.cpp
 plurkapidmessagedialog.cpp
 plurkapimicroblog.cpp
 plurkapimicroblogwidget.cpp

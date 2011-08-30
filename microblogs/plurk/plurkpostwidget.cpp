@@ -22,28 +22,84 @@
 
 */
 
-#include "plurkpostwidget.h"
-#include <plurkapimicroblog.h>
-#include "plurksearch.h"
 #include <KAction>
 #include <KMenu>
-#include <klocalizedstring.h>
-#include <plurkapiwhoiswidget.h>
-#include <plurkapiaccount.h>
+#include <KDebug>
+#include <KMessageBox>
 #include <KPushButton>
-#include <choqoktools.h>
+#include <klocalizedstring.h>
+#include <mediamanager.h>
+#include <textbrowser.h>
+#include "choqoktools.h"
+#include "choqokappearancesettings.h"
+#include "plurkpostwidget.h"
+#include "plurkapishowthread.h"
+#include "plurkapimicroblog.h"
+#include "plurksearch.h"
+#include "plurkapiwhoiswidget.h"
+#include "plurkapiaccount.h"
 
 const QRegExp PlurkPostWidget::mPlurkUserRegExp( "([\\s\\W]|^)@([a-z0-9_]+){1,20}", Qt::CaseInsensitive );
 const QRegExp PlurkPostWidget::mPlurkTagRegExp("([\\s]|^)#([a-z0-9_\\x00c4\\x00e4\\x00d6\\x00f6\\x00dc\\x00fc\\x00df]+)", Qt::CaseInsensitive );
 
-PlurkPostWidget::PlurkPostWidget(Choqok::Account* account, const Choqok::Post& post, QWidget* parent): PlurkApiPostWidget(account, post, parent)
-{
+const KIcon PlurkPostWidget::unFavIcon(Choqok::MediaManager::convertToGrayScale(KIcon("rating").pixmap(16)) );
 
+class PlurkPostWidget::Private
+{
+public:
+    Private(Choqok::Account* account)
+        :isBasePostShowed(false)
+    {
+        mBlog = qobject_cast<PlurkApiMicroBlog*>( account->microblog() );
+    }
+    KPushButton *btnFav;
+    bool isBasePostShowed;
+    PlurkApiMicroBlog *mBlog;
+};
+
+PlurkPostWidget::PlurkPostWidget(Choqok::Account* account, const Choqok::Post& post, QWidget* parent): PostWidget(account, post, parent), d(new Private(account))
+{
+    mainWidget()->document()->addResource( QTextDocument::ImageResource, QUrl("icon://thread"),
+                             KIcon("go-top").pixmap(10) );
+}
+
+PlurkPostWidget::~PlurkPostWidget()
+{
+    delete d;
 }
 
 void PlurkPostWidget::initUi()
 {
-    PlurkApiPostWidget::initUi();
+    Choqok::UI::PostWidget::initUi();
+
+    KPushButton *btnRe = addButton( "btnReply",i18nc( "@info:tooltip", "Reply" ), "edit-undo" );
+    QMenu *menu = new QMenu(btnRe);
+
+    KAction *actRep = new KAction(KIcon("edit-undo"), i18n("Reply to %1", currentPost().author.userName), menu);
+    menu->addAction(actRep);
+    connect( actRep, SIGNAL(triggered(bool)), SLOT(slotReply()) );
+    connect( btnRe, SIGNAL(clicked(bool)), SLOT(slotReply()) );
+
+    KAction *actWrite = new KAction( KIcon("document-edit"), i18n("Write to %1", currentPost().author.userName),
+                                     menu );
+    menu->addAction(actWrite);
+    connect( actWrite, SIGNAL(triggered(bool)), SLOT(slotWriteTo()) );
+
+    if( !currentPost().isPrivate ) {
+        KAction *actReplytoAll = new KAction(i18n("Reply to all"), menu);
+        menu->addAction(actReplytoAll);
+        connect( actReplytoAll, SIGNAL(triggered(bool)), SLOT(slotReplyToAll()) );
+    }
+
+    menu->setDefaultAction(actRep);
+    btnRe->setDelayedMenu(menu);
+
+    if( !currentPost().isPrivate ) {
+        d->btnFav = addButton( "btnFavorite",i18nc( "@info:tooltip", "Favorite" ), "rating" );
+        d->btnFav->setCheckable(true);
+        connect( d->btnFav, SIGNAL(clicked(bool)), SLOT(setFavorite()) );
+        updateFavStat();
+    }
 
     KPushButton *btn = buttons().value("btnResend");
 
@@ -64,10 +120,85 @@ void PlurkPostWidget::initUi()
 
 QString PlurkPostWidget::prepareStatus(const QString& text)
 {
-    QString res = PlurkApiPostWidget::prepareStatus(text);
+    QString res = Choqok::UI::PostWidget::prepareStatus(text);
     res.replace(mPlurkUserRegExp,"\\1@<a href='user://\\2'>\\2</a>");
     res.replace(mPlurkTagRegExp,"\\1#<a href='tag://\\2'>\\2</a>");
     return res;
+}
+
+QString PlurkPostWidget::generateSign()
+{
+    QString sign;
+    QString profUrl = currentAccount()->microblog()->profileUrl(currentAccount(),
+                                                                currentPost().author.userName);
+    sign = "<b><a href='user://"+currentPost().author.userName+"' title=\"" +
+    Qt::escape(currentPost().author.description) + "\">" + currentPost().author.userName +
+    "</a> - </b>";
+    //<img src=\"icon://web\" />
+    sign += "<a href=\"" + currentPost().link +
+    "\" title=\"" + currentPost().creationDateTime.toString( Qt::DefaultLocaleLongDate ) + "\">%1</a>";
+    if ( currentPost().isPrivate ) {
+        if( currentPost().replyToUserName.compare( currentAccount()->username(), Qt::CaseInsensitive ) == 0 ) {
+            sign.prepend( "From " );
+        } else {
+            sign.prepend( "To " );
+        }
+    } else {
+        if( !currentPost().source.isNull() ) {
+            sign += " - ";
+            if(currentPost().source == "ostatus" && !currentPost().author.homePageUrl.isEmpty()) {
+                KUrl srcUrl(currentPost().author.homePageUrl);
+                sign += i18n( "<a href='%1' title='Sent from %2 via OStatus'>%2</a>",
+                              currentPost().author.homePageUrl,
+                              srcUrl.host());
+            } else {
+                sign += currentPost().source;
+            }
+        }
+        if ( !currentPost().replyToPostId.isEmpty() ) {
+            QString link = currentAccount()->microblog()->postUrl( currentAccount(), currentPost().replyToUserName,
+                                                                   currentPost().replyToPostId );
+            QString showConMsg = i18n("Show Conversation");
+            QString threadlink = "thread://" + currentPost().postId;
+            sign += " - " +
+            i18n("<a href='replyto://%1'>in reply to</a>&nbsp;<a href=\"%2\" title=\"%2\">%3</a>",
+                currentPost().replyToPostId, link, webIconText) + ' ';
+            sign += "<a title=\""+ showConMsg +"\" href=\"" + threadlink + "\"><img src=\"icon://thread\" /></a>";
+        }
+    }
+
+    //ReTweet detection:
+    if( !currentPost().repeatedFromUsername.isEmpty() ){
+        QString retweet;
+        retweet += "<br/>"
+                +  d->mBlog->generateRepeatedByUserTooltip( QString("<a href='user://%1'>%2</a>").arg( currentPost().repeatedFromUsername).arg(currentPost().repeatedFromUsername) );
+        sign.append(retweet);
+    }
+    sign.prepend("<p dir='ltr'>");
+    sign.append( "</p>" );
+    return sign;
+}
+
+void PlurkPostWidget::slotReply()
+{
+    setReadWithSignal();
+    if(currentPost().isPrivate){
+        PlurkApiAccount *account= qobject_cast<PlurkApiAccount*>( currentAccount() );
+        d->mBlog->showDirectMessageDialog( account, currentPost().author.userName );
+    } else {
+        QString replyto = QString("@%1").arg(currentPost().author.userName);
+        QString postId = currentPost().postId;
+        if( !currentPost().repeatedFromUsername.isEmpty() ){
+            replyto.prepend(QString("@%1 ").arg(currentPost().repeatedFromUsername));
+            postId = currentPost().repeatedPostId;
+        }
+        emit reply( replyto, postId );
+    }
+}
+
+void PlurkPostWidget::slotWriteTo()
+{
+    emit reply( QString("@%1").arg(currentPost().author.userName), QString() );
 }
 
 void PlurkPostWidget::slotReplyToAll()
@@ -91,6 +222,47 @@ void PlurkPostWidget::slotReplyToAll()
     txt.chop(1);
 
     emit reply(txt, currentPost().postId);
+}
+
+void PlurkPostWidget::setFavorite()
+{
+    setReadWithSignal();
+    PlurkApiMicroBlog *mic = d->mBlog;
+    if(currentPost().isFavorited){
+        connect(mic, SIGNAL(favoriteRemoved(Choqok::Account*,QString)),
+                this, SLOT(slotSetFavorite(Choqok::Account*,QString)) );
+        mic->removeFavorite(currentAccount(), currentPost().postId);
+    } else {
+        connect(mic, SIGNAL(favoriteCreated(Choqok::Account*,QString)),
+                   this, SLOT(slotSetFavorite(Choqok::Account*,QString)) );
+        mic->createFavorite(currentAccount(), currentPost().postId);
+    }
+}
+
+void PlurkPostWidget::slotSetFavorite(Choqok::Account *theAccount, const QString& postId)
+{
+    if(currentAccount() == theAccount && postId == currentPost().postId){
+        kDebug()<<postId;
+        Choqok::Post tmp = currentPost();
+        tmp.isFavorited = !tmp.isFavorited;
+        setCurrentPost(tmp);
+        updateFavStat();
+        disconnect(d->mBlog, SIGNAL(favoriteRemoved(Choqok::Account*,QString)),
+                   this, SLOT(slotSetFavorite(Choqok::Account*,QString)) );
+        disconnect(d->mBlog, SIGNAL(favoriteCreated(Choqok::Account*,QString)),
+                   this, SLOT(slotSetFavorite(Choqok::Account*,QString)) );
+    }
+}
+
+void PlurkPostWidget::updateFavStat()
+{
+    if(currentPost().isFavorited){
+        d->btnFav->setChecked(true);
+        d->btnFav->setIcon(KIcon("rating"));
+    } else {
+        d->btnFav->setChecked(false);
+        d->btnFav->setIcon(unFavIcon);
+    }
 }
 
 void PlurkPostWidget::checkAnchor(const QUrl& url)
@@ -191,7 +363,75 @@ void PlurkPostWidget::checkAnchor(const QUrl& url)
         blog->searchBackend()->requestSearchResults(currentAccount(),
                                                     url.host(),
                                                     type);
-    } else
-        PlurkApiPostWidget::checkAnchor(url);
+    } else {
+        QString scheme = url.scheme();
+        if( scheme == "replyto" ) {
+            if(d->isBasePostShowed) {
+                setContent( prepareStatus(currentPost().content).replace("<a href","<a style=\"text-decoration:none\" href",Qt::CaseInsensitive) );
+                updateUi();
+                d->isBasePostShowed = false;
+                return;
+            } else {
+                connect(currentAccount()->microblog(), SIGNAL(postFetched(Choqok::Account*,Choqok::Post*)),
+                        this, SLOT(slotBasePostFetched(Choqok::Account*,Choqok::Post*)) );
+                Choqok::Post *ps = new Choqok::Post;
+                ps->postId = url.host();
+                currentAccount()->microblog()->fetchPost(currentAccount(), ps);
+            }
+        } else if (scheme == "thread") {
+            PlurkApiShowThread *wd = new PlurkApiShowThread(currentAccount(), currentPost(), NULL);
+            wd->resize(this->width(), wd->height());
+            connect(wd, SIGNAL(forwardReply(QString,QString)),
+                    this, SIGNAL(reply(QString,QString)));
+            connect(wd, SIGNAL(forwardResendPost(QString)),
+                    this, SIGNAL(resendPost(QString)));
+            wd->show();
+        } else {
+            Choqok::UI::PostWidget::checkAnchor(url);
+        }
+    }
 }
 
+void PlurkPostWidget::slotBasePostFetched(Choqok::Account* theAccount, Choqok::Post* post)
+{
+    if(theAccount == currentAccount() && post && post->postId == currentPost().replyToPostId){
+        kDebug();
+        disconnect( currentAccount()->microblog(), SIGNAL(postFetched(Choqok::Account*,Choqok::Post*)),
+                   this, SLOT(slotBasePostFetched(Choqok::Account*,Choqok::Post*)) );
+        if(d->isBasePostShowed)
+            return;
+        d->isBasePostShowed = true;
+        QString color;
+        if( Choqok::AppearanceSettings::isCustomUi() ) {
+            color = Choqok::AppearanceSettings::readForeColor().lighter().name();
+        } else {
+            color = this->palette().dark().color().name();
+        }
+        QString baseStatusText = "<p style=\"margin-top:10px; margin-bottom:10px; margin-left:20px;\
+        margin-right:20px; text-indent:0px\"><span style=\" color:" + color + ";\">";
+        baseStatusText += "<b><a href='user://"+ post->author.userName +"'>" +
+        post->author.userName + "</a> :</b> ";
+
+        baseStatusText += prepareStatus( post->content ) + "</p>";
+        setContent( content().prepend( baseStatusText.replace("<a href","<a style=\"text-decoration:none\" href",Qt::CaseInsensitive) ) );
+        updateUi();
+//         delete post;
+    }
+}
+
+void PlurkPostWidget::repeatPost()
+{
+    setReadWithSignal();
+    ChoqokId postId;
+    if(currentPost().repeatedPostId.isEmpty())
+        postId = currentPost().postId;
+    else
+        postId = currentPost().repeatedPostId;
+    if( KMessageBox::questionYesNo(Choqok::UI::Global::mainWindow(), d->mBlog->repeatQuestion(),
+                               QString(), KStandardGuiItem::yes(), KStandardGuiItem::cancel(),
+                               "dontAskRepeatConfirm") == KMessageBox::Yes )
+        d->mBlog->repeatPost(currentAccount(), postId);
+}
+
+
+#include "plurkpostwidget.moc"

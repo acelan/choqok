@@ -24,23 +24,42 @@
 
 #ifndef PLURKPOSTWIDGET_H
 #define PLURKPOSTWIDGET_H
-#include <plurkapipostwidget.h>
 
-class PlurkPostWidget : public PlurkApiPostWidget
+#include <postwidget.h>
+
+class PlurkPostWidget : public Choqok::UI::PostWidget
 {
+    Q_OBJECT
 public:
     PlurkPostWidget(Choqok::Account* account, const Choqok::Post& post, QWidget* parent = 0);
+    ~PlurkPostWidget();
     virtual void initUi();
+
+protected Q_SLOTS:
+    virtual void setFavorite();
+    virtual void slotSetFavorite(Choqok::Account *theAccount, const QString &postId);
+    virtual void slotReply();
+    void slotBasePostFetched(Choqok::Account* theAccount, Choqok::Post* post);
+    virtual void repeatPost();
+    virtual void slotWriteTo();
 
 protected slots:
     virtual void slotReplyToAll();
 
 protected:
     virtual QString prepareStatus(const QString& text);
+    virtual QString generateSign();
+    void updateFavStat();
+
     virtual void checkAnchor(const QUrl& url);
 
+    static const KIcon unFavIcon;
     static const QRegExp mPlurkUserRegExp;
     static const QRegExp mPlurkTagRegExp;
+
+private:
+    class Private;
+    Private * const d;
 };
 
 #endif // PLURKPOSTWIDGET_H

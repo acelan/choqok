@@ -37,7 +37,6 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include "editaccountwidget.h"
 #include "postwidget.h"
 #include "plurkapiaccount.h"
-#include "plurkapipostwidget.h"
 #include <KMenu>
 #include <KAction>
 #include <choqokuiglobal.h>
