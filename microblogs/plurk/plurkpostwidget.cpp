@@ -80,6 +80,8 @@ PlurkPostWidget::PlurkPostWidget(Choqok::Account* account, const Choqok::Post& p
 {
     mainWidget()->document()->addResource( QTextDocument::ImageResource, QUrl("icon://thread"),
                              KIcon("go-top").pixmap(10) );
+
+    connect(_mainWidget, SIGNAL(clicked(QMouseEvent*)), SLOT(mousePressEvent(QMouseEvent*)));
 }
 
 PlurkPostWidget::~PlurkPostWidget()
@@ -135,6 +137,17 @@ void PlurkPostWidget::initUi()
         menu->addAction(resend);
         btn->setMenu(menu);
     }
+}
+
+void PlurkPostWidget::mousePressEvent(QMouseEvent* ev)
+{
+    // TODO: fetch the responded message and build a linked list for it
+
+    if(!isRead()) {
+        setReadWithSignal();
+    }
+
+    QWidget::mousePressEvent(ev);
 }
 
 QString PlurkPostWidget::prepareStatus(const QString& text)

@@ -42,8 +42,7 @@ protected Q_SLOTS:
     void slotBasePostFetched(Choqok::Account* theAccount, Choqok::Post* post);
     virtual void repeatPost();
     virtual void slotWriteTo();
-
-protected slots:
+    virtual void mousePressEvent(QMouseEvent* ev);
     virtual void slotReplyToAll();
 
 protected:
