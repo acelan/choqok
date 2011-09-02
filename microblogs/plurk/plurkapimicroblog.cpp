@@ -799,7 +799,7 @@ void PlurkApiMicroBlog::slotRequestTimeline ( KJob *job )
     kDebug() << "type is: " << type;
 //    if( isValidTimeline(type) ) {
         KIO::StoredTransferJob* j = qobject_cast<KIO::StoredTransferJob*>( job );
-        kDebug() << "data is: " << j->data();
+//        kDebug() << "data is: " << j->data();
         QList<Choqok::Post*> list;
         if( type=="Inbox" || type=="Outbox" ) {
             list = readDMessagesFromJson( theAccount, j->data() );
@@ -1144,7 +1144,7 @@ QList< Choqok::Post* > PlurkApiMicroBlog::readTimelineFromJson(Choqok::Account* 
     QVariantMap plurksMap= d->parser.parse(buffer, &ok).toMap();
     QVariantMap plurkUsersMap = plurksMap["plurk_users"].toMap();
     QVariantList plurksList = plurksMap["plurks"].toList();
-    kDebug() << "map: " << plurksMap << endl;
+//    kDebug() << "map: " << plurksMap << endl;
 //    kDebug() << "plurk_users: " << plurkUsersMap << endl;
 //    kDebug() << "plurks(" << plurksList.count() << "): " << plurksList << endl;
 
@@ -1154,7 +1154,7 @@ QList< Choqok::Post* > PlurkApiMicroBlog::readTimelineFromJson(Choqok::Account* 
         QVariantList::const_iterator endIt = plurksList.constEnd();
         for(; it != endIt; ++it){
             QVariantMap plurkMap= it->toMap();
-            kDebug() << "owner_id: " << plurkMap["owner_id"].toString() << endl;
+//            kDebug() << "owner_id: " << plurkMap["owner_id"].toString() << endl;
             postList.prepend(readPostFromJsonMap(theAccount, it->toMap(), new PlurkPost, plurkUsersMap[plurkMap["owner_id"].toString()].toMap()));
         }
     } else {
@@ -1202,8 +1202,8 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJsonMap(Choqok::Account* theAccount
         kError()<<"PlurkApiMicroBlog::readPostFromJsonMap: post is NULL!";
         return 0;
     }
-    kDebug() << "userMap: " << userMap << endl;
-    kDebug() << "post: " << var << endl;
+//    kDebug() << "userMap: " << userMap << endl;
+//    kDebug() << "post: " << var << endl;
 
 //    PlurkPost* _post= (PlurkPost*)post;
     post->content = var["content"].toString();
@@ -1213,7 +1213,7 @@ Choqok::Post* PlurkApiMicroBlog::readPostFromJsonMap(Choqok::Account* theAccount
 
     post->isFavorited = var["favorite"].toBool();
     post->postId = var["plurk_id"].toString();
-    post->source = var["content_raw"].toString();
+//    post->source = var["content_raw"].toString();
     post->plurkType = var["plurk_type"].toInt();
 //    QVariantMap userMap = var["user"].toMap();
 //    post->author.description = userMap["description"].toString();

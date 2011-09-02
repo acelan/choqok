@@ -39,6 +39,25 @@
 #include "plurkapiwhoiswidget.h"
 #include "plurkapiaccount.h"
 
+const QString protocols = "((https?|ftps?)://)";
+const QString subdomains = "(([a-z0-9\\-_]{1,}\\.)?)";
+const QString auth = "((([a-z0-9\\-_]{1,})((:[\\S]{1,})?)@)?)";
+const QString domains = "(([a-z0-9\\-\\x0080-\\xFFFF_]){1,63}\\.)+";
+const QString port = "(:(6553[0-5]|655[0-2][0-9]|65[0-4][\\d]{2}|6[0-4][\\d]{3}|[1-5][\\d]{4}|[1-9][\\d]{0,3}))";
+const QString zone ("((a[cdefgilmnoqrstuwxz])|(b[abdefghijlmnorstvwyz])|(c[acdfghiklmnoruvxyz])|(d[ejkmoz])|(e[ceghrstu])|\
+(f[ijkmor])|(g[abdefghilmnpqrstuwy])|(h[kmnrtu])|(i[delmnoqrst])|(j[emop])|(k[eghimnprwyz])|(l[abcikrstuvy])|\
+(m[acdefghklmnopqrstuvwxyz])|(n[acefgilopruz])|(om)|(p[aefghklnrstwy])|(qa)|(r[eosuw])|(s[abcdeghijklmnortuvyz])|\
+(t[cdfghjkmnoprtvwz])|(u[agksyz])|(v[aceginu])|(w[fs])|(ye)|(z[amrw])\
+|(asia|com|info|net|org|biz|name|pro|aero|cat|coop|edu|jobs|mobi|museum|tel|travel|gov|int|mil|local|xxx)|(中国)|(公司)|(网络)|(صر)|(امارات)|(рф))");
+const QString ip = "(25[0-5]|[2][0-4][0-9]|[0-1]?[\\d]{1,2})(\\.(25[0-5]|[2][0-4][0-9]|[0-1]?[\\d]{1,2})){3}";
+const QString params = "(((\\/)[\\w:/\\?#\\[\\]@!\\$&\\(\\)\\*%\\+,;=\\._~\\x0080-\\xFFFF\\-\\|]{1,}|%[0-9a-f]{2})?)";
+
+const QRegExp PlurkPostWidget::mPlurkUrlRegExp("((((" + protocols + "?)" + auth +
+                          subdomains +
+                          '(' + domains +
+                          zone + "(?!(\\w))))|(" + protocols + '(' + ip + ")+))" +
+                          '(' + port + "?)" + "((\\/)?)"  +
+                          params + ')', Qt::CaseInsensitive);
 const QRegExp PlurkPostWidget::mPlurkUserRegExp( "([\\s\\W]|^)@([a-z0-9_]+){1,20}", Qt::CaseInsensitive );
 const QRegExp PlurkPostWidget::mPlurkTagRegExp("([\\s]|^)#([a-z0-9_\\x00c4\\x00e4\\x00d6\\x00f6\\x00dc\\x00fc\\x00df]+)", Qt::CaseInsensitive );
 
@@ -120,7 +139,34 @@ void PlurkPostWidget::initUi()
 
 QString PlurkPostWidget::prepareStatus(const QString& text)
 {
-    QString res = Choqok::UI::PostWidget::prepareStatus(text);
+//    QRegExp mPlurkUrlRegExp("((http://.*) (\(.*\))(.*))");
+    QString res = text; // Choqok::UI::PostWidget::prepareStatus(text);
+//    res.replace( "&amp;", "&amp;amp;" );
+//    res.replace( '<', "&lt;" );
+//    res.replace( '>', "&gt;" );
+
+    int pos = 0;
+    while(((pos = mPlurkUrlRegExp.indexIn(res, pos)) != -1)) {
+        QString link = mPlurkUrlRegExp.cap(0);
+kDebug() << "text: " << res << endl;
+        QString tmplink = link;
+        if ( (pos - 1 > -1 && ( res.at( pos - 1 ) != '@' &&
+             res.at( pos - 1 ) != '#' && res.at( pos - 1 ) != '!') &&
+             // <a href="http..."></a>
+             res.at( pos - 2 ) != '=') ||
+             pos == 0 ) {
+kDebug() << "link: (" << res.at( pos - 1 ) << ") " << link << endl;
+            res.remove( pos, link.length() );
+            if ( !tmplink.startsWith(QLatin1String("http"), Qt::CaseInsensitive) &&
+                 !tmplink.startsWith(QLatin1String("ftp"), Qt::CaseInsensitive) )
+                 tmplink.prepend("http://");
+            static const QString hrefTemplate("<a href='%1' title='%1' target='_blank'>%2</a>");
+            tmplink = hrefTemplate.arg( tmplink, link );
+            res.insert( pos, tmplink );
+        }
+        pos += tmplink.length();
+    }
+
     res.replace(mPlurkUserRegExp,"\\1@<a href='user://\\2'>\\2</a>");
     res.replace(mPlurkTagRegExp,"\\1#<a href='tag://\\2'>\\2</a>");
     return res;

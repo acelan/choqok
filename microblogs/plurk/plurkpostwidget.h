@@ -54,6 +54,7 @@ protected:
     virtual void checkAnchor(const QUrl& url);
 
     static const KIcon unFavIcon;
+    static const QRegExp mPlurkUrlRegExp;
     static const QRegExp mPlurkUserRegExp;
     static const QRegExp mPlurkTagRegExp;
 
