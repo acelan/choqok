@@ -42,6 +42,7 @@ public:
     User()
     :isProtected(false)
     {}
+    virtual ~User() {}
     ChoqokId userId;
     QString realName;
     QString userName;
@@ -58,6 +59,7 @@ public:
     Post()
     :isFavorited(false), isPrivate(false), isError(false), isRead(false)
     {}
+    virtual ~Post() {}
     QDateTime creationDateTime;
     ChoqokId postId;
     QString title;
