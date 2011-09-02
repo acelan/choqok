@@ -38,6 +38,7 @@ SOVERSION 1
 install(TARGETS plurkapihelper ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 install( FILES
+plurkapi.h
 plurkapialerts.h
 plurkapiblocks.h
 plurkapicliques.h
