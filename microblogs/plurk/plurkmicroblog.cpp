@@ -169,6 +169,7 @@ void PlurkMicroBlog::showListDialog(PlurkApiAccount* theAccount)
 void PlurkMicroBlog::fetchUserLists(PlurkAccount* theAccount, const QString& username)
 {
     kDebug();
+#if 0
     if ( !theAccount) {
         return;
     }
@@ -186,6 +187,7 @@ void PlurkMicroBlog::fetchUserLists(PlurkAccount* theAccount, const QString& use
     mJobsAccount[ job ] = theAccount;
     connect ( job, SIGNAL ( result ( KJob* ) ), this, SLOT ( slotFetchUserLists(KJob*) ) );
     job->start();
+#endif
 }
 
 void PlurkMicroBlog::slotFetchUserLists(KJob* job)

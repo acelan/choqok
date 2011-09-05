@@ -108,6 +108,7 @@ PlurkApiWhoisWidget::~PlurkApiWhoisWidget()
 void PlurkApiWhoisWidget::loadUserInfo(PlurkApiAccount* theAccount, const QString& username)
 {
     kDebug();
+#if 0
     QString urlStr;
     QString user = username;
     if(user.contains('@')) {
@@ -143,6 +144,7 @@ void PlurkApiWhoisWidget::loadUserInfo(PlurkApiAccount* theAccount, const QStrin
     d->job = job;
     connect( job, SIGNAL(result(KJob*)), SLOT(userInfoReceived(KJob*)));
     job->start();
+#endif
 }
 
 void PlurkApiWhoisWidget::userInfoReceived(KJob* job)

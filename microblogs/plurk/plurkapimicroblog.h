@@ -207,10 +207,6 @@ public:
      */
     virtual QString repeatQuestion() = 0;
 
-    virtual QByteArray authorizationHeader( PlurkApiAccount* theAccount,
-                                            const KUrl &requestUrl, QOAuth::HttpMethod method,
-                                            QOAuth::ParamMap params = QOAuth::ParamMap());
-
 public Q_SLOTS:
     /**
     Launch a dialog to send direct message.
@@ -278,10 +274,6 @@ protected:
     virtual QStringList readUsersScreenNameFromXml( Choqok::Account *theAccount, const QByteArray & buffer );
     virtual Choqok::User *readUserInfoFromXml( const QByteArray &buffer );
 #endif
-    /**
-    Checks xml returned from server for error, and return error string, Or an empty string if nothing found!
-    */
-    virtual QString checkXmlForError(const QByteArray &buffer);
 
     ///===============================================
     /// JSON:
