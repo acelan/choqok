@@ -28,9 +28,7 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include <QWidget>
 #include "ui_plurkeditaccount_base.h"
 
-namespace QOAuth {
-class Interface;
-}
+#include "plurkapihelper/plurkapioauth.h"
 
 class KJob;
 class QProgressBar;
@@ -38,7 +36,7 @@ class PlurkAccount;
 class PlurkMicroBlog;
 /**
 
-@author AceLan Kao \<acelan@gmail.com\>
+@author AceLan Kao \<acelan@acelan.idv.tw\>
 */
 class PlurkEditAccountWidget : public ChoqokEditAccountWidget, public Ui::PlurkEditAccountBase
 {
@@ -66,17 +64,12 @@ protected slots:
 protected:
     void loadTimelinesTableState();
     void saveTimelinesTableState();
-    virtual void getPinCode();
     void setAuthenticated(bool authenticated);
     bool isAuthenticated;
     PlurkMicroBlog *mBlog;
     PlurkAccount *mAccount;
     QProgressBar *progress;
     QString username;
-    QByteArray token;
-    QByteArray tokenSecret;
-    QOAuth::Interface *qoauth;
-
 };
 
 #endif

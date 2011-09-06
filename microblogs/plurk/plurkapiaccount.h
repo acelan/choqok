@@ -28,10 +28,6 @@
 #include <account.h>
 #include <choqok_export.h>
 
-namespace QOAuth {
-class Interface;
-}
-
 class PlurkApiMicroBlog;
 /**
 @author Mehrdad Momeny \<mehrdad.momeny@gmail.com\>
@@ -50,26 +46,6 @@ public:
     int countOfPosts() const;
     void setCountOfPosts(int count);
 
-    QString host() const;
-    void setHost( const QString &host );
-
-    /**
-    @return api path
-    It's defer from apiUrl.
-    For example: in http://identi.ca/api/
-    identi.ca is @ref host()
-    api is @ref api()
-    http://identi.ca/api/ is @ref apiUrl()
-    */
-    QString api() const;
-    void setApi( const QString &api );
-
-    /**
-    Combined from @ref host and @ref api to use for connections and queries
-    */
-    KUrl apiUrl() const;
-    virtual KUrl homepageUrl() const;
-
     QStringList friendsList() const;
 
     void setFriendsList( const QStringList &list );
@@ -77,28 +53,6 @@ public:
     virtual QStringList timelineNames() const;
 
     virtual void setTimelineNames(const QStringList &list);
-
-    QByteArray oauthToken() const;
-    void setOauthToken( const QByteArray &token );
-
-    QByteArray oauthTokenSecret() const;
-    void setOauthTokenSecret( const QByteArray &tokenSecret );
-
-    QByteArray oauthConsumerKey() const;
-    void setOauthConsumerKey( const QByteArray &consumerKey );
-
-    QByteArray oauthConsumerSecret() const;
-    void setOauthConsumerSecret( const QByteArray &consumerSecret );
-
-    bool usingOAuth() const;
-    void setUsingOAuth( bool use = true );
-
-    QOAuth::Interface *oauthInterface();
-protected:
-    void setApiUrl( const KUrl &apiUrl );
-    void setHomepageUrl( const KUrl& homepageUrl );
-    void generateApiUrl();
-    void initQOAuthInterface();
 
 private:
     class Private;

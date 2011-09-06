@@ -53,6 +53,8 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include <choqokappearancesettings.h>
 #include "application.h"
 
+#include "plurkapihelper/plurkapioauth.h"
+
 class PlurkApiMicroBlog::Private
 {
 public:
@@ -95,8 +97,8 @@ KIO::StoredTransferJob * PlurkApiMicroBlog::Private::makeRequest( PlurkApiAccoun
     url.addPath( apiPath );
 
     // NOTE Plurk API 2.0 always use OAuth
-    QByteArray header( account->oauthInterface()->createParametersString( url.url(), QOAuth::POST, account->oauthToken(), account->oauthTokenSecret(), QOAuth::HMAC_SHA1, oaParams, QOAuth::ParseForHeaderArguments ) );
-    qDebug() << header;
+    QByteArray header( PlurkApiOAuth::self()->oauthInterface()->createParametersString( url.url(), QOAuth::POST, PlurkApiOAuth::self()->oauthToken(), PlurkApiOAuth::self()->oauthTokenSecret(), QOAuth::HMAC_SHA1, oaParams, QOAuth::ParseForHeaderArguments ) );
+    kDebug() << header;
 
     KIO::StoredTransferJob * job = KIO::storedHttpPost( data, url, KIO::HideProgressInfo );
     // for POST method

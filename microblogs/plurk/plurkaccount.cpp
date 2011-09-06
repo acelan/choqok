@@ -34,18 +34,6 @@ public:
 PlurkAccount::PlurkAccount(PlurkMicroBlog* parent, const QString &alias)
     : PlurkApiAccount(parent, alias), d(new Private)
 {
-    setHost("http://www.plurk.com");
-    setApi("/APP");
-#if 0
-    QStringList lists;
-    foreach(const QString & tm, timelineNames()){
-        if(tm.startsWith('@'))
-            lists.append(tm);
-    }
-
-    if(!lists.isEmpty())
-        parent->setListTimelines(this, lists);
-#endif
 }
 
 PlurkAccount::~PlurkAccount()

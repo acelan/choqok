@@ -30,21 +30,12 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include <kio/job.h>
 #include <KMessageBox>
 #include <QDomDocument>
-#include <KToolInvocation>
 #include <QProgressBar>
 #include <accountmanager.h>
 #include <choqoktools.h>
-#include <QtOAuth/interface.h>
-#include <QtOAuth/qoauth_namespace.h>
 #include <kio/accessmanager.h>
 #include <QCheckBox>
 #include <KInputDialog>
-
-const char* plurkOAUTHRequestTokenURL = "http://www.plurk.com/OAuth/request_token";
-const char* plurkOAUTHAuthorizeURL = "http://www.plurk.com/OAuth/authorize";
-const char* plurkOAUTHAccessToken = "http://www.plurk.com/OAuth/access_token";
-const char* plurkConsumerKey = "4TH0YShIOi3g";
-const char* plurkConsumerSecret = "aAdoTJzJQAGcJauJ3dHLYV7LkSEo7tUS";
 
 PlurkEditAccountWidget::PlurkEditAccountWidget(PlurkMicroBlog *microblog,
                                                     PlurkAccount* account, QWidget* parent)
@@ -54,12 +45,10 @@ PlurkEditAccountWidget::PlurkEditAccountWidget(PlurkMicroBlog *microblog,
     connect(kcfg_authorize, SIGNAL(clicked(bool)), SLOT(authorizeUser()));
     if(mAccount) {
         kcfg_alias->setText( mAccount->alias() );
-        if(mAccount->oauthToken().isEmpty() || mAccount->oauthTokenSecret().isEmpty()) {
+        if( PlurkApiOAuth::self()->oauthToken().isEmpty() || PlurkApiOAuth::self()->oauthTokenSecret().isEmpty()) {
             setAuthenticated(false);
         } else {
             setAuthenticated(true);
-            token = mAccount->oauthToken();
-            tokenSecret = mAccount->oauthTokenSecret();
             username = mAccount->username();
         }
     } else {
@@ -96,11 +85,6 @@ Choqok::Account* PlurkEditAccountWidget::apply()
     kDebug();
     mAccount->setAlias(kcfg_alias->text());
     mAccount->setUsername( username );
-    mAccount->setOauthToken( token );
-    mAccount->setOauthTokenSecret( tokenSecret );
-    mAccount->setOauthConsumerKey( plurkConsumerKey );
-    mAccount->setOauthConsumerSecret( plurkConsumerSecret );
-    mAccount->setUsingOAuth(true);
 //    saveTimelinesTableState();
     mAccount->writeConfig();
     return mAccount;
@@ -109,67 +93,9 @@ Choqok::Account* PlurkEditAccountWidget::apply()
 void PlurkEditAccountWidget::authorizeUser()
 {
     kDebug();
-    qoauth = new QOAuth::Interface(new KIO::AccessManager(this), this);//TODO KDE 4.5 Change to use new class.
-    // set the consumer key and secret
-    qoauth->setConsumerKey( plurkConsumerKey );
-    qoauth->setConsumerSecret( plurkConsumerSecret );
-    // set a timeout for requests (in msecs)
-    qoauth->setRequestTimeout( 20000 );
-    qoauth->setIgnoreSslErrors(true);
-
-    QOAuth::ParamMap otherArgs;
-
-    // send a request for an unauthorized token
-    QOAuth::ParamMap reply =
-        qoauth->requestToken( plurkOAUTHRequestTokenURL, QOAuth::GET, QOAuth::HMAC_SHA1 );
-
-    // if no error occurred, read the received token and token secret
-    if ( qoauth->error() == QOAuth::NoError ) {
-        token = reply.value( QOAuth::tokenParameterName() );
-        tokenSecret = reply.value( QOAuth::tokenSecretParameterName() );
-        kDebug()<<"token: "<<token;
-	QUrl url(plurkOAUTHAuthorizeURL);
-        url.addQueryItem("oauth_token", token);
-        url.addQueryItem( "oauth_callback", "oob" );
-        Choqok::openUrl(url);
-        getPinCode();
-    } else {
-        kDebug()<<"ERROR: " <<qoauth->error()<<' '<<Choqok::qoauthErrorText(qoauth->error());
-        KMessageBox::detailedError(this, i18n("Authorization Error"),
-                                   Choqok::qoauthErrorText(qoauth->error()));
-    }
-}
-
-void PlurkEditAccountWidget::getPinCode()
-{
-    isAuthenticated = false;
-    while(!isAuthenticated){
-        QString verifier = KInputDialog::getText( i18n("Security code"),
-                                                  i18nc("Security code recieved from Plurk",
-                                                        "Enter security code:"));
-        if(verifier.isEmpty())
-            return;
-        QOAuth::ParamMap otherArgs;
-        otherArgs.insert( "oauth_verifier", verifier.toUtf8() );
-
-        // send a request to exchange Request Token for an Access Token
-        QOAuth::ParamMap reply =
-        qoauth->accessToken( QString(plurkOAUTHAccessToken),
-                             QOAuth::GET, token, tokenSecret, QOAuth::HMAC_SHA1, otherArgs );
-        // if no error occurred, read the Access Token (and other arguments, if applicable)
-        if ( qoauth->error() == QOAuth::NoError ) {
-            username = reply.value( "screen_name" );
-            token = reply.value( QOAuth::tokenParameterName() );
-            tokenSecret = reply.value( QOAuth::tokenSecretParameterName() );
-            setAuthenticated(true);
-            KMessageBox::information(this, i18n("Choqok is authorized successfully."),
-                                     i18n("Authorized"));
-        } else {
-            kDebug()<<"ERROR: "<<qoauth->error()<<' '<<Choqok::qoauthErrorText(qoauth->error());
-            KMessageBox::detailedError(this, i18n("Authorization Error"),
-                                    Choqok::qoauthErrorText(qoauth->error()));
-        }
-    }
+    bool ok= PlurkApiOAuth::self()->authorizeUser();
+    if( ok)
+        setAuthenticated(ok);
 }
 
 void PlurkEditAccountWidget::setAuthenticated(bool authenticated)

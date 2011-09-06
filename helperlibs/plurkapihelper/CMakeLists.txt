@@ -9,6 +9,7 @@ plurkapiblocks.cpp
 plurkapicliques.cpp
 plurkapiemoticons.cpp
 plurkapifriendsandfans.cpp
+plurkapioauth.cpp
 plurkapiplurksearch.cpp
 plurkapiplurktop.cpp
 plurkapiprofile.cpp
@@ -44,6 +45,7 @@ plurkapiblocks.h
 plurkapicliques.h
 plurkapiemoticons.h
 plurkapifriendsandfans.h
+plurkapioauth.h
 plurkapiplurksearch.h
 plurkapiplurktop.h
 plurkapiprofile.h
