@@ -32,7 +32,7 @@
 #include <KApplication>
 #include <QtGui/QDesktopWidget>
 #include <QtGui/QVBoxLayout>
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <KIO/Job>
 #include <KDebug>
 #include <QtXml/QDomDocument>
@@ -52,13 +52,13 @@
 class PlurkApiWhoisWidget::Private
 {
 public:
-    Private(PlurkApiAccount *account, const QString &userN)
+    Private(PlurkAccount *account, const QString &userN)
     :currentAccount(account), waitFrame(0), job(0), username(userN)
     {
         mBlog = qobject_cast<PlurkApiMicroBlog*>(account->microblog());
     }
     KTextBrowser *wid;
-    PlurkApiAccount *currentAccount;
+    PlurkAccount *currentAccount;
     PlurkApiMicroBlog *mBlog;
     QFrame *waitFrame;
     QPointer<KJob> job;
@@ -74,7 +74,7 @@ public:
 //     bool isFollowing;
 };
 
-PlurkApiWhoisWidget::PlurkApiWhoisWidget(PlurkApiAccount* theAccount, const QString& username,
+PlurkApiWhoisWidget::PlurkApiWhoisWidget(PlurkAccount* theAccount, const QString& username,
                                              const Choqok::Post &post, QWidget* parent)
     : QFrame(parent), d(new Private(theAccount, username))
 {
@@ -105,7 +105,7 @@ PlurkApiWhoisWidget::~PlurkApiWhoisWidget()
     delete d;
 }
 
-void PlurkApiWhoisWidget::loadUserInfo(PlurkApiAccount* theAccount, const QString& username)
+void PlurkApiWhoisWidget::loadUserInfo(PlurkAccount* theAccount, const QString& username)
 {
     kDebug();
 #if 0

@@ -34,7 +34,7 @@
 #include "plurkmicroblog.h"
 #include <QLayout>
 
-PlurkListDialog::PlurkListDialog(PlurkApiAccount* theAccount, QWidget* parent)
+PlurkListDialog::PlurkListDialog(PlurkAccount* theAccount, QWidget* parent)
 : KDialog(parent)
 {
     if(theAccount){

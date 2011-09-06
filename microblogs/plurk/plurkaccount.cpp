@@ -23,22 +23,121 @@
 */
 
 #include "plurkaccount.h"
-#include "plurkmicroblog.h"
+#include "plurkapimicroblog.h"
+#include <passwordmanager.h>
 #include <KDebug>
+
+#include "plurkapihelper/plurkapioauth.h"
 
 class PlurkAccount::Private
 {
 public:
+    QString userId;
+    int count;
+    QStringList friendsList;
+    QStringList timelineNames;
+
+    PlurkApiOAuth* plurkOAuth;
 };
 
-PlurkAccount::PlurkAccount(PlurkMicroBlog* parent, const QString &alias)
-    : PlurkApiAccount(parent, alias), d(new Private)
+PlurkAccount::PlurkAccount(PlurkApiMicroBlog* parent, const QString &alias)
+    : Account(parent, alias), d(new Private)
 {
+    kDebug();
+    d->userId = configGroup()->readEntry("UserId", QString());
+    d->count = configGroup()->readEntry("CountOfPosts", 20);
+    d->friendsList = configGroup()->readEntry("Friends", QStringList());
+    d->timelineNames = configGroup()->readEntry("Timelines", QStringList());
+
+    PlurkApiOAuth::self()->setOAuthToken( configGroup()->readEntry("OAuthToken", QByteArray()));
+    PlurkApiOAuth::self()->setOAuthConsumerKey( configGroup()->readEntry("OAuthConsumerKey", QByteArray()));
+    PlurkApiOAuth::self()->setOAuthConsumerSecret( Choqok::PasswordManager::self()->readPassword(
+                                            QString("%1_consumerSecret").arg(alias) ).toUtf8());
+    PlurkApiOAuth::self()->setOAuthTokenSecret( Choqok::PasswordManager::self()->readPassword(
+                                            QString("%1_tokenSecret").arg(alias) ).toUtf8());
+
+    if( d->userId.isEmpty() ) {
+        // NOTE this is an asynchronized method
+        parent->getProfile( this );
+    }
+
+    if( d->timelineNames.isEmpty() ){
+        QStringList list = parent->timelineNames();
+        list.removeOne("Public");
+        list.removeOne("Favorite");
+        list.removeOne("ReTweets");
+        d->timelineNames = list;
+    }
+
+    if( d->friendsList.isEmpty() ){
+        parent->listFriendsUsername(this);
+        //Result will set on PlurkApiMicroBlog!
+    }
 }
 
 PlurkAccount::~PlurkAccount()
 {
     delete d;
+}
+
+void PlurkAccount::writeConfig()
+{
+    configGroup()->writeEntry("UserId", d->userId);
+    configGroup()->writeEntry("CountOfPosts", d->count);
+    configGroup()->writeEntry("Friends", d->friendsList);
+    configGroup()->writeEntry("Timelines", d->timelineNames);
+    configGroup()->writeEntry("OAuthToken", PlurkApiOAuth::self()->oauthToken() );
+    configGroup()->writeEntry("OAuthConsumerKey", PlurkApiOAuth::self()->oauthConsumerKey() );
+    Choqok::PasswordManager::self()->writePassword( QString("%1_consumerSecret").arg(alias()),
+                                                    QString::fromUtf8(PlurkApiOAuth::self()->oauthConsumerSecret()) );
+    Choqok::PasswordManager::self()->writePassword( QString("%1_tokenSecret").arg(alias()),
+                                                    QString::fromUtf8( PlurkApiOAuth::self()->oauthTokenSecret()) );
+    Choqok::Account::writeConfig();
+}
+
+QString PlurkAccount::userId() const
+{
+    return d->userId;
+}
+
+void PlurkAccount::setUserId( const QString &id )
+{
+    d->userId = id;
+}
+
+int PlurkAccount::countOfPosts() const
+{
+    return d->count;
+}
+
+void PlurkAccount::setCountOfPosts(int count)
+{
+    d->count = count;
+}
+
+QStringList PlurkAccount::friendsList() const
+{
+    return d->friendsList;
+}
+
+void PlurkAccount::setFriendsList(const QStringList& list)
+{
+    d->friendsList = list;
+    writeConfig();
+}
+
+QStringList PlurkAccount::timelineNames() const
+{
+    return d->timelineNames;
+}
+
+void PlurkAccount::setTimelineNames(const QStringList& list)
+{
+    d->timelineNames.clear();
+    foreach(const QString &name, list){
+        if(microblog()->timelineNames().contains(name))
+            d->timelineNames<<name;
+    }
 }
 
 #include "plurkaccount.moc"

@@ -25,7 +25,7 @@
 #include "plurkapicomposerwidget.h"
 #include "plurkapitextedit.h"
 #include <QtGui/QCompleter>
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <KDebug>
 #include <choqokuiglobal.h>
 #include <postwidget.h>
@@ -45,7 +45,7 @@ PlurkApiComposerWidget::PlurkApiComposerWidget(Choqok::Account* account, QWidget
 : Choqok::UI::ComposerWidget(account, parent), d(new Private)
 {
     kDebug();
-    d->model = new QStringListModel(qobject_cast<PlurkApiAccount*>(account)->friendsList(), this);
+    d->model = new QStringListModel(qobject_cast<PlurkAccount*>(account)->friendsList(), this);
 //     d->index = new QModelIndex(d->model->rowCount(), 0, 0, d->model);
 //     kDebug()<<d->index;
     PlurkApiTextEdit *edit = new PlurkApiTextEdit(140, this);

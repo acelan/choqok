@@ -35,7 +35,7 @@
 #include <KMessageBox>
 #include <KAction>
 #include <KMenu>
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 
 class PlurkApiMicroBlogWidget::Private
 {
@@ -45,10 +45,10 @@ public:
     {
         kDebug();
         mBlog = qobject_cast<PlurkApiMicroBlog *>(acc->microblog());
-        this->account = qobject_cast<PlurkApiAccount *>(acc);
+        this->account = qobject_cast<PlurkAccount *>(acc);
     }
     PlurkApiMicroBlog *mBlog;
-    PlurkApiAccount *account;
+    PlurkAccount *account;
     QToolButton *btnCloseSearch;
 };
 

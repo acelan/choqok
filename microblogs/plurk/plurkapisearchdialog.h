@@ -28,12 +28,12 @@
 #include <kdialog.h>
 #include "choqok_export.h"
 
-class PlurkApiAccount;
+class PlurkAccount;
 class CHOQOK_HELPER_EXPORT PlurkApiSearchDialog : public KDialog
 {
     Q_OBJECT
 public:
-    explicit PlurkApiSearchDialog(PlurkApiAccount* theAccount, QWidget* parent = 0);
+    explicit PlurkApiSearchDialog(PlurkAccount* theAccount, QWidget* parent = 0);
     ~PlurkApiSearchDialog();
 
 protected:

@@ -34,7 +34,6 @@
 #include <accountmanager.h>
 #include <choqoktypes.h>
 
-class PlurkApiAccount;
 namespace Choqok {
 class Account;
 }

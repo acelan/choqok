@@ -35,7 +35,7 @@ class PostWidget;
 }
 }
 
-class PlurkApiAccount;
+class PlurkAccount;
 class CHOQOK_HELPER_EXPORT PlurkApiShowThread : public QWidget
 {
     Q_OBJECT

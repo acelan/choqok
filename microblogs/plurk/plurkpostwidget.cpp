@@ -37,7 +37,7 @@
 #include "plurkapimicroblog.h"
 #include "plurksearch.h"
 #include "plurkapiwhoiswidget.h"
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 
 const QString protocols = "((https?|ftps?)://)";
 const QString subdomains = "(([a-z0-9\\-_]{1,}\\.)?)";
@@ -242,7 +242,7 @@ void PlurkPostWidget::slotReply()
 {
     setReadWithSignal();
     if(currentPost().isPrivate){
-        PlurkApiAccount *account= qobject_cast<PlurkApiAccount*>( currentAccount() );
+        PlurkAccount *account= qobject_cast<PlurkAccount*>( currentAccount() );
         d->mBlog->showDirectMessageDialog( account, currentPost().author.userName );
     } else {
         QString replyto = QString("@%1").arg(currentPost().author.userName);
@@ -328,7 +328,7 @@ void PlurkPostWidget::checkAnchor(const QUrl& url)
 {
     QString scheme = url.scheme();
     PlurkApiMicroBlog* blog = qobject_cast<PlurkApiMicroBlog*>(currentAccount()->microblog());
-    PlurkApiAccount *account = qobject_cast<PlurkApiAccount*>(currentAccount());
+    PlurkAccount *account = qobject_cast<PlurkAccount*>(currentAccount());
     if( scheme == "tag" ) {
         blog->searchBackend()->requestSearchResults(currentAccount(),
                                                     KUrl::fromPunycode(url.host().toUtf8()),

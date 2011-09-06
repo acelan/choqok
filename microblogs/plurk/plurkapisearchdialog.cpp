@@ -23,7 +23,7 @@
 */
 
 #include "plurkapisearchdialog.h"
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <kcombobox.h>
 #include <klineedit.h>
 #include <QGridLayout>
@@ -36,7 +36,7 @@
 class PlurkApiSearchDialog::Private
 {
 public:
-    Private(PlurkApiAccount* theAccount)
+    Private(PlurkAccount* theAccount)
         :account(theAccount)
     {
         kDebug();
@@ -47,11 +47,11 @@ public:
     }
     KComboBox *searchTypes;
     KLineEdit *searchQuery;
-    PlurkApiAccount* account;
+    PlurkAccount* account;
     PlurkApiMicroBlog *mBlog;
 };
 
-PlurkApiSearchDialog::PlurkApiSearchDialog(PlurkApiAccount* theAccount, QWidget* parent)
+PlurkApiSearchDialog::PlurkApiSearchDialog(PlurkAccount* theAccount, QWidget* parent)
 : KDialog(parent), d(new Private(theAccount))
 {
     kDebug();

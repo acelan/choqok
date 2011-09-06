@@ -33,13 +33,13 @@ namespace Choqok {
 class Account;
 }
 
-class PlurkApiAccount;
+class PlurkAccount;
 class KJob;
 class CHOQOK_HELPER_EXPORT PlurkApiWhoisWidget : public QFrame
 {
     Q_OBJECT
 public:
-    PlurkApiWhoisWidget( PlurkApiAccount* theAccount, const QString &userName,
+    PlurkApiWhoisWidget( PlurkAccount* theAccount, const QString &userName,
                            const Choqok::Post &post, QWidget *parent=0 );
     ~PlurkApiWhoisWidget();
     void show(QPoint pos);
@@ -63,7 +63,7 @@ protected:
 private:
     void setupUi();
     void showForm();
-    void loadUserInfo( PlurkApiAccount* thAccount, const QString& username );
+    void loadUserInfo( PlurkAccount* thAccount, const QString& username );
     class Private;
     Private * const d;
 };

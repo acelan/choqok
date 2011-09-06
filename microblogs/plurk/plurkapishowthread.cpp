@@ -25,7 +25,7 @@
 #include "plurkapishowthread.h"
 #include <QVBoxLayout>
 #include <QScrollArea>
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <postwidget.h>
 #include <KDebug>
 #include <klocalizedstring.h>

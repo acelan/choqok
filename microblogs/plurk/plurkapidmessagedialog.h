@@ -33,18 +33,18 @@ class Account;
 struct Post;
 }
 
-class PlurkApiAccount;
+class PlurkAccount;
 
 class CHOQOK_HELPER_EXPORT PlurkApiDMessageDialog : public KDialog
 {
     Q_OBJECT
 public:
-    explicit PlurkApiDMessageDialog( PlurkApiAccount *theAccount, QWidget* parent = 0, Qt::WFlags flags = 0);
+    explicit PlurkApiDMessageDialog( PlurkAccount *theAccount, QWidget* parent = 0, Qt::WFlags flags = 0);
     ~PlurkApiDMessageDialog();
     void setTo(const QString &username);
 
 protected Q_SLOTS:
-    void friendsUsernameListed( PlurkApiAccount *, const QMap< QString, QString > & );
+    void friendsUsernameListed( PlurkAccount *, const QMap< QString, QString > & );
     void submitPost(QString);
     void reloadFriendslist();
     void postCreated(Choqok::Account*,Choqok::Post*);

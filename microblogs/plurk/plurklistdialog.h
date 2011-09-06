@@ -37,14 +37,14 @@ class Account;
 class QListWidgetItem;
 class PlurkMicroBlog;
 class PlurkAccount;
-class PlurkApiAccount;
+class PlurkAccount;
 
 
 class PlurkListDialog : public KDialog
 {
     Q_OBJECT
 public:
-    explicit PlurkListDialog(PlurkApiAccount* theAccount, QWidget* parent = 0);
+    explicit PlurkListDialog(PlurkAccount* theAccount, QWidget* parent = 0);
     virtual ~PlurkListDialog();
 
 protected:

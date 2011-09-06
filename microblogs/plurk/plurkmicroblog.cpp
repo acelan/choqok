@@ -154,11 +154,11 @@ QMenu* PlurkMicroBlog::createActionsMenu(Choqok::Account* theAccount, QWidget* p
     return menu;
 }
 
-void PlurkMicroBlog::showListDialog(PlurkApiAccount* theAccount)
+void PlurkMicroBlog::showListDialog(PlurkAccount* theAccount)
 {
     if( !theAccount ) {
         KAction *act = qobject_cast<KAction *>(sender());
-        theAccount = qobject_cast<PlurkApiAccount*>(
+        theAccount = qobject_cast<PlurkAccount*>(
                                     Choqok::AccountManager::self()->findAccount( act->data().toString() ) );
     }
     QPointer<PlurkListDialog> listDlg = new PlurkListDialog( theAccount,

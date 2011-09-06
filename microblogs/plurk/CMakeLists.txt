@@ -22,7 +22,6 @@ plurkapishowthread.cpp
 plurkapitextedit.cpp
 plurkapicomposerwidget.cpp
 plurkapitimelinewidget.cpp
-plurkapiaccount.cpp
 plurkapisearch.cpp
 )
 

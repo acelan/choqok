@@ -47,7 +47,7 @@ class Interface;
 }
 
 class PlurkApiSearchTimelineWidget;
-class PlurkApiAccount;
+class PlurkAccount;
 class KJob;
 
 class CHOQOK_HELPER_EXPORT PlurkUser : public Choqok::User
@@ -179,7 +179,7 @@ public:
 
     virtual void aboutToUnload();
 
-    virtual void listFriendsUsername( PlurkApiAccount *theAccount );
+    virtual void listFriendsUsername( PlurkAccount *theAccount );
 
     virtual Choqok::TimelineInfo * timelineInfo(const QString &timelineName);
 
@@ -195,7 +195,7 @@ public:
 
     QDateTime dateFromString( const QString &date );
 
-    void getProfile( PlurkApiAccount * theAccount );
+    void getProfile( PlurkAccount * theAccount );
 
     /**
      * The text to add under repeated posts, to notice user about it.
@@ -214,15 +214,15 @@ public Q_SLOTS:
         1. Calling with theAccount option
         2. Get called by a signal from a KAction (Microblog menu)
     */
-    virtual void showDirectMessageDialog( PlurkApiAccount *theAccount = 0,
+    virtual void showDirectMessageDialog( PlurkAccount *theAccount = 0,
                                           const QString &toUsername = QString() );
 
-    void showSearchDialog( PlurkApiAccount *theAccount = 0 );
+    void showSearchDialog( PlurkAccount *theAccount = 0 );
 
 Q_SIGNALS:
     void favoriteCreated(Choqok::Account *theAccount, const QString &postId);
     void favoriteRemoved(Choqok::Account *theAccount, const QString &postId);
-    void friendsUsernameListed( PlurkApiAccount * theAccount, const QMap< QString, QString > & friendsList );
+    void friendsUsernameListed( PlurkAccount * theAccount, const QMap< QString, QString > & friendsList );
 
     void friendshipCreated(Choqok::Account *theAccount, const QString &newFriendUsername);
     void friendshipDestroyed(Choqok::Account *theAccount, const QString &username);
@@ -235,7 +235,7 @@ protected Q_SLOTS:
     virtual void slotCreateFavorite( KJob *job );
     virtual void slotRemoveFavorite( KJob *job );
     virtual void slotRequestTimeline( KJob *job );
-    virtual void requestFriendsScreenName( PlurkApiAccount* theAccount );
+    virtual void requestFriendsScreenName( PlurkAccount* theAccount );
     virtual void slotRequestFriendsScreenName( KJob *job );
     virtual void slotCreateFriendship( KJob *job );
     virtual void slotDestroyFriendship( KJob *job );
@@ -292,7 +292,7 @@ protected:
     virtual QMap< QString, QString > readUsersScreenNameFromJson( Choqok::Account *theAccount, const QByteArray & buffer );
     virtual Choqok::User *readUserInfoFromJson( const QByteArray &buffer );
     virtual Choqok::User readUserFromJsonMap( Choqok::Account* theAccount, const QVariantMap& map );
-    virtual QVariantMap readProfileFromJson( PlurkApiAccount * theAccount, const QByteArray & buffer );
+    virtual QVariantMap readProfileFromJson( PlurkAccount * theAccount, const QByteArray & buffer );
     /**
     Checks xml returned from server for error, and return error string, Or an empty string if nothing found!
     */

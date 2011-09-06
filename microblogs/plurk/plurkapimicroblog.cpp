@@ -36,7 +36,7 @@ along with this program; if not, see http://www.gnu.org/licenses/
 #include "timelinewidget.h"
 #include "editaccountwidget.h"
 #include "postwidget.h"
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <KMenu>
 #include <KAction>
 #include <choqokuiglobal.h>
@@ -74,7 +74,7 @@ public:
         monthes["Dec"] = 12;
     }
 
-    KIO::StoredTransferJob * makeRequest( PlurkApiAccount * account, const QString & apiPath, const QMap< QString, QString > & params = QMap< QString, QString >() );
+    KIO::StoredTransferJob * makeRequest( PlurkAccount * account, const QString & apiPath, const QMap< QString, QString > & params = QMap< QString, QString >() );
 
     int countOfTimelinesToSave;
     QString friendsCursor;
@@ -83,7 +83,7 @@ public:
     QMap< QString, QString > friendsMap;
 };
 
-KIO::StoredTransferJob * PlurkApiMicroBlog::Private::makeRequest( PlurkApiAccount * account, const QString & apiPath, const QMap< QString, QString > & params ) {
+KIO::StoredTransferJob * PlurkApiMicroBlog::Private::makeRequest( PlurkAccount * account, const QString & apiPath, const QMap< QString, QString > & params ) {
     QOAuth::ParamMap oaParams;
     QByteArray data;
     for( QMap< QString, QString >::const_iterator it = params.begin(); it != params.end(); ++it ) {
@@ -300,7 +300,7 @@ PlurkApiSearchTimelineWidget * PlurkApiMicroBlog::createSearchTimelineWidget(Cho
 void PlurkApiMicroBlog::createPost ( Choqok::Account* theAccount, Choqok::Post* post )
 {
     kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
 
     if ( !post || post->content.isEmpty() ) {
         kDebug() << "ERROR: Status text is empty!";
@@ -349,7 +349,7 @@ void PlurkApiMicroBlog::repeatPost(Choqok::Account* theAccount, const ChoqokId& 
         kError() << "ERROR: PostId is empty!";
         return;
     }
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath ( QString("/statuses/retweet/%1.%2").arg(postId).arg(format) );
     QByteArray data;
@@ -442,7 +442,7 @@ void PlurkApiMicroBlog::fetchPost ( Choqok::Account* theAccount, Choqok::Post* p
     if ( !post || post->postId.isEmpty()) {
         return;
     }
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath ( QString("/statuses/show/%1.%2").arg(post->postId).arg(format) );
 
@@ -505,7 +505,7 @@ void PlurkApiMicroBlog::removePost ( Choqok::Account* theAccount, Choqok::Post* 
     kDebug();
 #if 0
     if ( !post->postId.isEmpty() ) {
-        PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+        PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
         KUrl url = account->apiUrl();
         if ( !post->isPrivate ) {
             url.addPath ( "/statuses/destroy/" + post->postId + ".xml" );
@@ -560,7 +560,7 @@ void PlurkApiMicroBlog::createFavorite ( Choqok::Account* theAccount, const QStr
 {
     kDebug();
 #if 0
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath ( "/favorites/create/" + postId + ".xml" );
     KIO::StoredTransferJob *job = KIO::storedHttpPost ( QByteArray(), url, KIO::HideProgressInfo ) ;
@@ -609,7 +609,7 @@ void PlurkApiMicroBlog::removeFavorite ( Choqok::Account* theAccount, const QStr
 {
     kDebug();
 #if 0
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath ( "/favorites/destroy/" + postId + ".xml" );
     KIO::StoredTransferJob *job = KIO::storedHttpPost ( QByteArray(), url, KIO::HideProgressInfo ) ;
@@ -654,7 +654,7 @@ void PlurkApiMicroBlog::slotRemoveFavorite ( KJob *job )
 #endif
 }
 
-void PlurkApiMicroBlog::getProfile(PlurkApiAccount* theAccount)
+void PlurkApiMicroBlog::getProfile(PlurkAccount* theAccount)
 {
     KIO::StoredTransferJob * job = d->makeRequest( theAccount, "/Profile/getOwnProfile" );
     if ( !job ) {
@@ -669,7 +669,7 @@ void PlurkApiMicroBlog::getProfile(PlurkApiAccount* theAccount)
 
 void PlurkApiMicroBlog::slotGetProfile(KJob* job)
 {
-    PlurkApiAccount * theAccount = qobject_cast< PlurkApiAccount * >( mJobsAccount.take( job ) );
+    PlurkAccount * theAccount = qobject_cast< PlurkAccount * >( mJobsAccount.take( job ) );
     KIO::StoredTransferJob * stj = qobject_cast< KIO::StoredTransferJob * >( job );
     if( stj->error() ) {
         emit error(theAccount, ServerError, i18n("Profile for account %1 could not be updated:\n%2",
@@ -681,7 +681,7 @@ void PlurkApiMicroBlog::slotGetProfile(KJob* job)
     theAccount->setUsername( userData["display_name"].toString() );
 }
 
-void PlurkApiMicroBlog::listFriendsUsername(PlurkApiAccount* theAccount)
+void PlurkApiMicroBlog::listFriendsUsername(PlurkAccount* theAccount)
 {
     d->friendsMap.clear();
     if ( theAccount ) {
@@ -689,7 +689,7 @@ void PlurkApiMicroBlog::listFriendsUsername(PlurkApiAccount* theAccount)
     }
 }
 
-void PlurkApiMicroBlog::requestFriendsScreenName(PlurkApiAccount* theAccount)
+void PlurkApiMicroBlog::requestFriendsScreenName(PlurkAccount* theAccount)
 {
     QMap< QString, QString > params;
     params.insert( "user_id", theAccount->userId() );
@@ -710,7 +710,7 @@ void PlurkApiMicroBlog::requestFriendsScreenName(PlurkApiAccount* theAccount)
 void PlurkApiMicroBlog::slotRequestFriendsScreenName(KJob* job)
 {
     kDebug();
-    PlurkApiAccount *theAccount = qobject_cast<PlurkApiAccount *>( mJobsAccount.take(job) );
+    PlurkAccount *theAccount = qobject_cast<PlurkAccount *>( mJobsAccount.take(job) );
     KIO::StoredTransferJob* stJob = qobject_cast<KIO::StoredTransferJob*>( job );
     if (stJob->error()) {
         emit error(theAccount, ServerError, i18n("Friends list for account %1 could not be updated:\n%2",
@@ -751,7 +751,7 @@ void PlurkApiMicroBlog::requestTimeLine ( Choqok::Account* theAccount, QString t
                                             QString latestStatusId, int page, QString maxId )
 {
     kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
 
     int countOfPost = Choqok::BehaviorSettings::countOfPosts();
 
@@ -876,13 +876,13 @@ void PlurkApiMicroBlog::aboutToUnload()
     emit saveTimelines();
 }
 
-void PlurkApiMicroBlog::showDirectMessageDialog( PlurkApiAccount *theAccount/* = 0*/,
+void PlurkApiMicroBlog::showDirectMessageDialog( PlurkAccount *theAccount/* = 0*/,
                                                    const QString &toUsername/* = QString()*/ )
 {
     kDebug();
     if( !theAccount ) {
         KAction *act = qobject_cast<KAction *>(sender());
-        theAccount = qobject_cast<PlurkApiAccount*>(
+        theAccount = qobject_cast<PlurkAccount*>(
                                     Choqok::AccountManager::self()->findAccount( act->data().toString() ) );
     }
     PlurkApiDMessageDialog *dmsg = new PlurkApiDMessageDialog(theAccount, Choqok::UI::Global::mainWindow());
@@ -899,11 +899,11 @@ Choqok::TimelineInfo * PlurkApiMicroBlog::timelineInfo(const QString& timelineNa
         return 0;
 }
 
-void PlurkApiMicroBlog::showSearchDialog(PlurkApiAccount* theAccount)
+void PlurkApiMicroBlog::showSearchDialog(PlurkAccount* theAccount)
 {
     if( !theAccount ) {
         KAction *act = qobject_cast<KAction *>(sender());
-        theAccount = qobject_cast<PlurkApiAccount*>(
+        theAccount = qobject_cast<PlurkAccount*>(
                                     Choqok::AccountManager::self()->findAccount( act->data().toString() ) );
     }
     QPointer<PlurkApiSearchDialog> searchDlg = new PlurkApiSearchDialog( theAccount,
@@ -914,7 +914,7 @@ void PlurkApiMicroBlog::showSearchDialog(PlurkApiAccount* theAccount)
 void PlurkApiMicroBlog::slotUpdateFriendsList()
 {
     KAction *act = qobject_cast<KAction *>(sender());
-    PlurkApiAccount* theAccount = qobject_cast<PlurkApiAccount*>(
+    PlurkAccount* theAccount = qobject_cast<PlurkAccount*>(
                                         Choqok::AccountManager::self()->findAccount( act->data().toString() ) );
     listFriendsUsername(theAccount);
 }
@@ -923,7 +923,7 @@ void PlurkApiMicroBlog::createFriendship( Choqok::Account *theAccount, const QSt
 {
 #if 0
     kDebug();
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath( "/friendships/create/"+ username +".xml" );
     kDebug()<<url;
@@ -949,7 +949,7 @@ void PlurkApiMicroBlog::slotCreateFriendship(KJob* job)
         kError()<<"Job is a null Pointer!";
         return;
     }
-    PlurkApiAccount *theAccount = qobject_cast<PlurkApiAccount*>( mJobsAccount.take(job) );
+    PlurkAccount *theAccount = qobject_cast<PlurkAccount*>( mJobsAccount.take(job) );
     QString username = mFriendshipMap.take(job);
     if(job->error()){
         kDebug()<<"Job Error:"<<job->errorString();
@@ -985,7 +985,7 @@ void PlurkApiMicroBlog::destroyFriendship( Choqok::Account *theAccount, const QS
 {
     kDebug();
 #if 0
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath( "/friendships/destroy/" + username + ".xml" );
     kDebug()<<url;
@@ -1011,7 +1011,7 @@ void PlurkApiMicroBlog::slotDestroyFriendship(KJob* job)
         kError()<<"Job is a null Pointer!";
         return;
     }
-    PlurkApiAccount *theAccount = qobject_cast<PlurkApiAccount*>( mJobsAccount.take(job) );
+    PlurkAccount *theAccount = qobject_cast<PlurkAccount*>( mJobsAccount.take(job) );
     QString username = mFriendshipMap.take(job);
     if(job->error()){
         kDebug()<<"Job Error:"<<job->errorString();
@@ -1047,7 +1047,7 @@ void PlurkApiMicroBlog::blockUser( Choqok::Account *theAccount, const QString& u
 {
     kDebug();
 #if 0
-    PlurkApiAccount* account = qobject_cast<PlurkApiAccount*>(theAccount);
+    PlurkAccount* account = qobject_cast<PlurkAccount*>(theAccount);
     KUrl url = account->apiUrl();
     url.addPath( "/blocks/create/"+ username +".xml" );
 
@@ -1340,7 +1340,7 @@ Choqok::User PlurkApiMicroBlog::readUserFromJsonMap(Choqok::Account* theAccount,
     return u;
 }
 
-QVariantMap PlurkApiMicroBlog::readProfileFromJson(PlurkApiAccount* theAccount, const QByteArray& buffer)
+QVariantMap PlurkApiMicroBlog::readProfileFromJson(PlurkAccount* theAccount, const QByteArray& buffer)
 {
     bool ok = false;
     QVariantMap profile( d->parser.parse( buffer, &ok ).toMap() );

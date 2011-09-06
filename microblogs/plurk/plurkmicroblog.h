@@ -74,7 +74,7 @@ signals:
     void userLists(Choqok::Account* theAccount, const QString& username, QList<Plurk::List> lists);
 
 protected slots:
-    void showListDialog(PlurkApiAccount* theAccount = 0);
+    void showListDialog(PlurkAccount* theAccount = 0);
     void slotFetchUserLists(KJob *job);
 
 protected:

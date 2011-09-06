@@ -27,7 +27,7 @@
 #include <kcombobox.h>
 #include <QVBoxLayout>
 #include <choqoktextedit.h>
-#include "plurkapiaccount.h"
+#include "plurkaccount.h"
 #include <microblog.h>
 #include <klocalizedstring.h>
 #include <KPushButton>
@@ -39,16 +39,16 @@
 class PlurkApiDMessageDialog::Private
 {
 public:
-    Private(PlurkApiAccount *theAccount)
+    Private(PlurkAccount *theAccount)
     :account(theAccount)
     {}
     KComboBox *comboFriendsList;
     Choqok::UI::TextEdit *editor;
-    PlurkApiAccount *account;
+    PlurkAccount *account;
     Choqok::Post *sentPost;
 };
 
-PlurkApiDMessageDialog::PlurkApiDMessageDialog(PlurkApiAccount *theAccount, QWidget* parent,
+PlurkApiDMessageDialog::PlurkApiDMessageDialog(PlurkAccount *theAccount, QWidget* parent,
                                                    Qt::WFlags flags)
     : KDialog(parent, flags), d(new Private(theAccount))
 {
@@ -108,8 +108,8 @@ void PlurkApiDMessageDialog::reloadFriendslist()
     d->comboFriendsList->clear();
     PlurkApiMicroBlog * blog = qobject_cast<PlurkApiMicroBlog*>(d->account->microblog());
     if(blog) {
-        connect( blog, SIGNAL(friendsUsernameListed(PlurkApiAccount*,const QMap<QString,QString>&)),
-                 this, SLOT(friendsUsernameListed(PlurkApiAccount*,const QMap<QString,QString>&)) );
+        connect( blog, SIGNAL(friendsUsernameListed(PlurkAccount*,const QMap<QString,QString>&)),
+                 this, SLOT(friendsUsernameListed(PlurkAccount*,const QMap<QString,QString>&)) );
                  blog->listFriendsUsername(d->account);
                  d->comboFriendsList->setCurrentItem(i18n("Please wait..."), true);
     }
@@ -144,7 +144,7 @@ void PlurkApiDMessageDialog::submitPost(QString text)
     d->account->microblog()->createPost(d->account, d->sentPost);
 }
 
-void PlurkApiDMessageDialog::friendsUsernameListed(PlurkApiAccount* theAccount, const QMap< QString, QString > & list)
+void PlurkApiDMessageDialog::friendsUsernameListed(PlurkAccount* theAccount, const QMap< QString, QString > & list)
 {
     if(theAccount == d->account){
         d->comboFriendsList->removeItem(0);

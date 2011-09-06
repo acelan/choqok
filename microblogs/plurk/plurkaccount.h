@@ -26,19 +26,34 @@
 #define PLURKACCOUNT_H
 
 #include <account.h>
-#include <plurkapiaccount.h>
 
-class PlurkMicroBlog;
+class PlurkApiMicroBlog;
 /**
 
-@author AceLan Kao \<acelan@gmail.com\>
+@author AceLan Kao \<acelan@acelan.idv.tw\>
 */
-class PlurkAccount : public PlurkApiAccount
+class CHOQOK_HELPER_EXPORT PlurkAccount : public Choqok::Account
 {
     Q_OBJECT
 public:
-    PlurkAccount(PlurkMicroBlog* parent, const QString& alias);
+    PlurkAccount(PlurkApiMicroBlog* parent, const QString& alias);
     ~PlurkAccount();
+
+    virtual void writeConfig();
+
+    QString userId() const;
+    void setUserId( const QString &id );
+
+    int countOfPosts() const;
+    void setCountOfPosts(int count);
+
+    QStringList friendsList() const;
+
+    void setFriendsList( const QStringList &list );
+
+    virtual QStringList timelineNames() const;
+
+    virtual void setTimelineNames(const QStringList &list);
 
 private:
     class Private;
