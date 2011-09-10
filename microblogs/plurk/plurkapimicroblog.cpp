@@ -84,11 +84,9 @@ public:
 };
 
 KIO::StoredTransferJob * PlurkApiMicroBlog::Private::makeRequest( PlurkAccount * account, const QString & apiPath, const QMap< QString, QString > & params ) {
-    QOAuth::ParamMap oaParams;
     QByteArray data;
     for( QMap< QString, QString >::const_iterator it = params.begin(); it != params.end(); ++it ) {
         QByteArray key( QUrl::toPercentEncoding( it.key() ) ), value( QUrl::toPercentEncoding( it.value() ) );
-        oaParams.insert( key, value );
         data += key + "=" + value + "&";
     }
     data.chop( 1 );
@@ -97,13 +95,14 @@ KIO::StoredTransferJob * PlurkApiMicroBlog::Private::makeRequest( PlurkAccount *
     url.addPath( apiPath );
 
     // NOTE Plurk API 2.0 always use OAuth
-    QByteArray header( PlurkApiOAuth::self()->oauthInterface()->createParametersString( url.url(), QOAuth::POST, PlurkApiOAuth::self()->oauthToken(), PlurkApiOAuth::self()->oauthTokenSecret(), QOAuth::HMAC_SHA1, oaParams, QOAuth::ParseForHeaderArguments ) );
+    QByteArray header( PlurkApiOAuth::self()->makeHeader( url.url(), params ) );
     kDebug() << header;
 
+    // FIXME when will this object be deleted?
     KIO::StoredTransferJob * job = KIO::storedHttpPost( data, url, KIO::HideProgressInfo );
     // for POST method
     job->addMetaData( "content-type", "Content-Type: application/x-www-form-urlencoded" );
-    job->addMetaData( "customHTTPHeader", "Authorization: " + header );
+    job->addMetaData( "customHTTPHeader", header );
 
     return job;
 }

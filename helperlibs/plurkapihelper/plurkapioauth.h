@@ -25,52 +25,40 @@
 
 #ifndef PLURKAPIOAUTH_H
 #define PLURKAPIOAUTH_H
-
-#include <QWidget>
-#include <QtOAuth/QtOAuth>
-#include <QtOAuth/interface.h>
-#include <QtOAuth/qoauth_namespace.h>
-
 #include "choqok_export.h"
 
-class CHOQOK_EXPORT PlurkApiOAuth : public QWidget
+#include <QtCore/QSharedPointer>
+
+class CHOQOK_EXPORT PlurkApiOAuth
 {
-    Q_OBJECT
 public:
-    ~PlurkApiOAuth();
     static PlurkApiOAuth* self();
 
     bool authorizeUser();
     bool getPinCode();
 
-    QByteArray oauthToken() const;
+    const QByteArray & oauthToken() const;
     void setOAuthToken( const QByteArray &token );
 
-    QByteArray oauthTokenSecret() const;
+    const QByteArray & oauthTokenSecret() const;
     void setOAuthTokenSecret( const QByteArray &tokenSecret );
 
-    QByteArray oauthConsumerKey() const;
+    const QByteArray & oauthConsumerKey() const;
     void setOAuthConsumerKey( const QByteArray &consumerKey );
 
-    QByteArray oauthConsumerSecret() const;
-    void setOAuthConsumerSecret( const QByteArray &consumerSecret );
+    const QByteArray & oauthConsumerSecret() const;
+	void setOAuthConsumerSecret( const QByteArray &consumerSecret );
 
-    QOAuth::Interface *oauthInterface();
-
-protected:
-    QString username;
-
-    QByteArray _oauthToken;
-    QByteArray _oauthTokenSecret;
-    QByteArray _oauthConsumerKey;
-    QByteArray _oauthConsumerSecret;
-    QOAuth::Interface *qoauth;
-
-    void initQOAuthInterface();
+    QByteArray makeHeader( const QString & url, const QMap< QString, QString > & params ) const;
 
 private:
     PlurkApiOAuth();
+    PlurkApiOAuth( const PlurkApiOAuth & );
+	~PlurkApiOAuth();
+
     static PlurkApiOAuth* mSelf;
+	class Private;
+    QSharedPointer< Private > d;
 };
 
 #endif
