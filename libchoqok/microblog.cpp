@@ -44,12 +44,14 @@ public:
     uint charLimit;
     QStringList timelineTypes;
     QTimer* saveTimelinesTimer;
+    MicroBlogType microBlogType;
 };
 
 MicroBlog::MicroBlog( const KComponentData &instance, QObject *parent )
     :Plugin(instance, parent), d(new Private)
 {
     kDebug();
+    d->microBlogType = ChoqokPlugin;
     d->saveTimelinesTimer = new QTimer(this);
     d->saveTimelinesTimer->setInterval(BehaviorSettings::notifyInterval() * 60000);
     connect(d->saveTimelinesTimer, SIGNAL(timeout()), SIGNAL(saveTimelines()));
@@ -239,5 +241,14 @@ QString MicroBlog::profileUrl(Account* , const QString& ) const
     return QString();
 }
 
+void MicroBlog::setMicroBlogType(MicroBlogType type)
+{
+    d->microBlogType= type;
+}
+
+MicroBlog::MicroBlogType MicroBlog::microBlogType(void) const
+{
+    return d->microBlogType;
+}
 
 }

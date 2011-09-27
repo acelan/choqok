@@ -36,6 +36,9 @@
 #include "editaccountdialog.h"
 #include <choqokuiglobal.h>
 #include <KPluginFactory>
+#include <akonadi/agentinstancemodel.h>
+#include <akonadi/agentmanager.h>
+#include <akonadi/agentfilterproxymodel.h>
 
 K_PLUGIN_FACTORY( ChoqokAccountsConfigFactory,
                   registerPlugin<AccountsWidget>(); )
@@ -237,6 +240,11 @@ KMenu * AccountsWidget::createAddAccountMenu()
     mBlogMenu = new KMenu(i18n("Select Micro-Blogging Service"), this);
     const QList<KPluginInfo> list = Choqok::PluginManager::self()->availablePlugins("MicroBlogs");
     foreach(const KPluginInfo& info, list){
+        // We will filter out non-choqok plugin type microblog later
+        Choqok::MicroBlog *blog = qobject_cast<Choqok::MicroBlog *>(Choqok::PluginManager::self()->loadPlugin(info.pluginName()));
+        if(blog && blog->microBlogType() != Choqok::MicroBlog::ChoqokPlugin)
+            continue;
+
         KAction *act = new KAction(mBlogMenu);
         act->setText(info.name());
         act->setIcon( KIcon(info.icon()) );
@@ -244,6 +252,34 @@ KMenu * AccountsWidget::createAddAccountMenu()
         connect(act, SIGNAL(triggered(bool)), this, SLOT(addAccount()) );
         mBlogMenu->addAction(act);
     }
+
+    // Add Adkonadi microblog resource
+    Akonadi::AgentInstance::List instances = Akonadi::AgentManager::self()->instances();
+
+    foreach ( const Akonadi::AgentInstance &instance, instances ) {
+        // kDebug() << "Name:" << instance.name() << "(" << instance.identifier() << ") type: " << instance.type().mimeTypes();
+        if( !instance.type().mimeTypes().contains("application/x-vnd.kde.microblog"))
+            continue;
+
+        // the default UI for Akonadi microblog
+        QString pluginName = "choqok_amicroblog";
+        foreach(const KPluginInfo& info, list) {
+            if( info.pluginName().contains( instance.name(), Qt::CaseInsensitive))
+            {
+                pluginName = info.pluginName();
+                break;
+            }
+        }
+
+        kDebug() << "Akonadi plugin is: " << pluginName << " from: " << instance.name();
+        KAction *act = new KAction(mBlogMenu);
+        act->setText(instance.name());
+        act->setIcon(KIcon(instance.type().icon()));
+        act->setData(pluginName);
+        connect(act, SIGNAL(triggered(bool)), this, SLOT(addAccount()));
+        mBlogMenu->addAction(act);
+    }
+
     return mBlogMenu;
 }
 

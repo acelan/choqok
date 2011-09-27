@@ -100,6 +100,16 @@ public:
     };
 
     /**
+    Enumeration for possible type of microblogs
+    You should set the microblog type to AkonadiResource,
+    if the data source is from Akonadi microblog.
+    */
+    enum MicroBlogType {
+        ChoqokPlugin = 0,
+        AkonadiResource,
+    };
+
+    /**
     * @brief Create a new Account
     *
     * This method is called during the loading of the config file.
@@ -270,6 +280,8 @@ public:
     */
     uint postCharLimit() const;
 
+    MicroBlogType microBlogType() const;
+
 Q_SIGNALS:
 
     /**
@@ -320,6 +332,7 @@ protected:
     void setServiceName(const QString&);
     void setServiceHomepageUrl(const QString&);
     void setCharLimit(uint);
+    void setMicroBlogType( MicroBlogType type);
 
 protected slots:
     void slotConfigChanged();

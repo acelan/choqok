@@ -1,3 +1,4 @@
+find_package(KdepimLibs REQUIRED)
 
 include_directories(
 ${CHOQOK_INCLUDES}
@@ -18,7 +19,7 @@ kde4_add_ui_files(kcm_choqok_accountsconfig_PART_SRCS accountswidget_base.ui )
 kde4_add_plugin(kcm_choqok_accountsconfig ${kcm_choqok_accountsconfig_PART_SRCS})
 
 
-target_link_libraries(kcm_choqok_accountsconfig ${KDE4_KDEUI_LIBS} ${KDE4_KUTILS_LIBS} choqok)
+target_link_libraries(kcm_choqok_accountsconfig ${KDE4_KDEUI_LIBS} ${KDE4_KUTILS_LIBS} ${KDEPIMLIBS_AKONADI_LIBS} choqok)
 
 install(TARGETS kcm_choqok_accountsconfig  DESTINATION ${PLUGIN_INSTALL_DIR})
 
