@@ -36,7 +36,7 @@ public :
 
     virtual Choqok::Account* createNewAccount( const QString &alias );
     virtual ChoqokEditAccountWidget* createEditAccountWidget(Choqok::Account* account, QWidget* parent);
-//    virtual Choqok::UI::MicroBlogWidget* createMicroBlogWidget( Choqok::Account *account, QWidget *parent );
+    virtual Choqok::UI::MicroBlogWidget* createMicroBlogWidget( Choqok::Account *account, QWidget *parent );
     virtual Choqok::UI::ComposerWidget* createComposerWidget( Choqok::Account *account, QWidget *parent );
     virtual Choqok::UI::TimelineWidget* createTimelineWidget( Choqok::Account *account, const QString &timelineName,
                                                    QWidget *parent );
@@ -54,5 +54,9 @@ public :
     virtual QString profileUrl( Choqok::Account *account, const QString &username) const;
     virtual QString postUrl( Choqok::Account *account, const QString &username, const QString &postId) const;
     virtual Choqok::TimelineInfo* timelineInfo( const QString &timelineName );
+
+private:
+    QMap<QString,Choqok::TimelineInfo*> timelineInfos;
+
 };   
 #endif
